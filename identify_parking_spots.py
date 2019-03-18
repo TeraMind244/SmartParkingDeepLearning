@@ -11,6 +11,7 @@ cwd = os.getcwd()
 #get_ipython().run_line_magic('matplotlib', 'inline')
 #get_ipython().run_line_magic('config', "InlineBackend.figure_format = 'retina'")
 
+#Modified to read data from 1 image only
 
 #%%
 def resize(image, v_height):
@@ -20,7 +21,7 @@ def resize(image, v_height):
     return cv2.resize(image,(int(newX),int(newY)))
 
 #%%
-def show_images(images, cmap=None):
+def show_image(image, cmap=None):
 #    cols = 1
 #    rows = (len(images)+1)//cols
 #    
@@ -36,7 +37,6 @@ def show_images(images, cmap=None):
 #    plt.show()
     plt.figure(figsize=(15, 12))
     plt.subplot(1, 1, 1)
-    image = images[0]
     # use gray scale color map if there is only one channel
     cmap = 'gray' if len(image.shape)==2 else cmap
     plt.imshow(image, cmap=cmap)
@@ -46,22 +46,27 @@ def show_images(images, cmap=None):
 
 #%%
 test_images = [plt.imread(path) for path in glob.glob('test_images/*.jpg')]
-
+image = test_images[0]
 MAX_KERNEL_LENGTH = 10
 
+#Resize and blur
+kernel_size = 9
+image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
+image = resize(image, 720)
+
 #resize input image (1280x720 should be fined)
-for index, t_image in enumerate(test_images):
-    i = 31
-    t_image = cv2.bilateralFilter(t_image, i, i * 2, i / 2)
-    t_image = resize(t_image, 720)
-    test_images[index] = t_image
+#for index, t_image in enumerate(test_images):
+#    i = 31
+#    t_image = cv2.bilateralFilter(t_image, i, i * 2, i / 2)
+#    t_image = resize(t_image, 720)
+#    test_images[index] = t_image
 #    for i in range(1, MAX_KERNEL_LENGTH, 2):
 #        test_images[index] = cv2.blur(test_images[index], (i, i))
 
 #for i in range(1, 3, 2):
 #    dst = cv2.blur(image, (i, i))
 
-#show_images(test_images)
+#show_image(image)
 
 #%% [markdown]
 # ### Color Selection and Edge Detection
@@ -82,25 +87,25 @@ def select_rgb_white_yellow(image):
     masked = cv2.bitwise_and(image, image, mask = mask)
     return masked
 
-white_yellow_images = list(map(select_rgb_white_yellow, test_images))
-#show_images(white_yellow_images)
+white_yellow_image = select_rgb_white_yellow(image)
+#show_image(white_yellow_image)
 
 
 #%%
 def convert_gray_scale(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-gray_images = list(map(convert_gray_scale, white_yellow_images))
+gray_image = convert_gray_scale(image)
 
-#show_images(gray_images)
+#show_image(gray_image)
 
 #%%
-def detect_edges(image, low_threshold=50, high_threshold=200):
+def detect_edges(image, low_threshold=20, high_threshold=150):
     return cv2.Canny(image, low_threshold, high_threshold)
 
-edge_images = list(map(lambda image: detect_edges(image), gray_images))
+edge_image = detect_edges(gray_image)
 
-#show_images(edge_images)
+#show_image(edge_image)
 
 #%% [markdown]
 # ### Identify area of interest
@@ -150,9 +155,9 @@ def select_region(image):
 
 
 # images showing the region of interest only
-roi_images = list(map(select_region, edge_images))
+roi_image = select_region(edge_image)
 
-show_images(roi_images)
+show_image(roi_image)
 
 #%% [markdown]
 # ### Hough line transform
@@ -170,7 +175,7 @@ def hough_lines(image):
                            threshold=20, minLineLength=50, maxLineGap=10)
 
 
-list_of_lines = list(map(hough_lines, roi_images))
+lines = hough_lines(roi_image)
 
 
 #%%
@@ -188,11 +193,13 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
     return image
 
 
-line_images = []
-for image, lines in zip(test_images, list_of_lines):
-    line_images.append(draw_lines(image, lines))
+#line_images = []
+#for image, lines in zip(test_images, list_of_lines):
+#    line_images.append(draw_lines(image, lines))
     
-show_images(line_images)
+line_image = draw_lines(image, lines)
+    
+show_image(line_image)
 
 #%% [markdown]
 # ### Identify rectangular blocks of parking
@@ -267,7 +274,7 @@ show_images(line_images)
 #    rect_images.append(new_image)
 #    rect_coords.append(rects)
 #    
-#show_images(rect_images)
+#show_image(rect_images)
 #
 ##%% [markdown]
 ## ### Identify each spot and count num of parking spaces
@@ -337,7 +344,7 @@ show_images(line_images)
 #    delineated.append(new_image)
 #    spot_pos.append(spot_dict)
 #    
-#show_images(delineated)
+#show_image(delineated)
 #
 #
 ##%%
@@ -358,7 +365,7 @@ show_images(line_images)
 #    return new_image
 #
 #marked_spot_images = list(map(assign_spots_map, test_images))
-#show_images(marked_spot_images)
+#show_image(marked_spot_images)
 #
 #
 ##%%
@@ -470,7 +477,7 @@ show_images(line_images)
 #
 #
 #predicted_images = list(map(predict_on_image, test_images))
-#show_images(predicted_images)
+#show_image(predicted_images)
 
 #%% [markdown]
 # ### Run code on video
