@@ -58,8 +58,7 @@ MAX_KERNEL_LENGTH = 10
 
 #Resize and blur
 kernel_size = 3
-image = cv2.bilateralFilter(
-    image, kernel_size, kernel_size * 2, kernel_size / 2)
+#image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
 image = resize(image, 720)
 
 # resize input image (1280x720 should be fined)
@@ -118,7 +117,7 @@ def detect_edges(image, low_threshold=20, high_threshold=150):
 
 
 edge_image = detect_edges(gray_image)
-show_image(edge_image)
+#show_image(edge_image)
 
 # %% [markdown]
 # ### Identify area of interest
@@ -193,8 +192,7 @@ def hough_lines(image):
 #    return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
 #                           threshold=15, minLineLength=9, maxLineGap=4)
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=25, minLineLength=50, maxLineGap=10)
-
+                           threshold=10, minLineLength=40, maxLineGap=40)
 
 lines = hough_lines(roi_image)
 
@@ -207,18 +205,17 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
     cleaned = []
     for line in lines:
         for x1, y1, x2, y2 in line:
-            if abs(y2-y1) <= 1 and abs(x2-x1) >= 100 and abs(x2-x1) <= 1000:
+            if abs(y2-y1) <= 5 and abs(x2-x1) >= 50 and abs(x2-x1) <= 1000:
                 cleaned.append((x1, y1, x2, y2))
                 cv2.line(image, (x1, y1), (x2, y2), color, thickness)
     print(" No. lines detected: ", len(cleaned))
-    return image
-
+    return image, cleaned
 
 #line_images = []
 # for image, lines in zip(test_images, list_of_lines):
 #    line_images.append(draw_lines(image, lines))
 
-line_image = draw_lines(image, lines)
+line_image, cleaned = draw_lines(image, lines)
 show_image(line_image)
 
 # %% [markdown]
@@ -231,21 +228,22 @@ def identify_blocks(image, lines, make_copy=True):
     if make_copy:
         new_image = np.copy(image)
     # Step 1: Create a clean list of lines
-    cleaned = []
-    for line in lines:
-        for x1, y1, x2, y2 in line:
-            if abs(y2-y1) <= 1 and abs(x2-x1) >= 100 and abs(x2-x1) <= 1000:
-                cleaned.append((x1, y1, x2, y2))
+#    cleaned = []
+#    for line in lines:
+#        for x1, y1, x2, y2 in line:
+#            if abs(y2-y1) <= 1 and abs(x2-x1) >= 100 and abs(x2-x1) <= 1000:
+#                cleaned.append((x1, y1, x2, y2))
 
     # Step 2: Sort cleaned by x1 position
     import operator
-    global sorted_lines
+    global sorted_lines, cleaned
+
     sorted_lines = sorted(cleaned, key=operator.itemgetter(0, 1))
 
     # Step 3: Find clusters of x1 close together - clust_dist apart
     clusters = {}
     dIndex = 0
-    clus_dist = 10
+    clus_dist = 55
 
     for i in range(len(sorted_lines) - 1):
         distance = abs(sorted_lines[i+1][0] - sorted_lines[i][0])
@@ -255,7 +253,6 @@ def identify_blocks(image, lines, make_copy=True):
                 clusters[dIndex] = []
             clusters[dIndex].append(sorted_lines[i])
             clusters[dIndex].append(sorted_lines[i + 1])
-
         else:
             dIndex += 1
 
@@ -269,20 +266,26 @@ def identify_blocks(image, lines, make_copy=True):
             cleaned = sorted(cleaned, key=lambda tup: tup[1])
             avg_y1 = cleaned[0][1]
             avg_y2 = cleaned[-1][1]
-    #         print(avg_y1, avg_y2)
-            avg_x1 = 0
-            avg_x2 = 0
-            for tup in cleaned:
-                avg_x1 += tup[0]
-                avg_x2 += tup[2]
-            avg_x1 = avg_x1/len(cleaned)
-            avg_x2 = avg_x2/len(cleaned)
-            rects[i] = (avg_x1, avg_y1, avg_x2, avg_y2)
+#            print(avg_y1, avg_y2)
+#            avg_x1 = 0
+#            avg_x2 = 0
+#            for tup in cleaned:
+#                avg_x1 += tup[0]
+#                avg_x2 += tup[2]
+#            avg_x1 = avg_x1/len(cleaned)
+#            avg_x2 = avg_x2/len(cleaned)
+#            rects[i] = (avg_x1, avg_y1, avg_x2, avg_y2)
+            
+            cleaned = sorted(cleaned, key=lambda tup: tup[0])
+            max_x1 = cleaned[0][0]
+            cleaned = sorted(cleaned, key=lambda tup: tup[2])
+            min_x2 = cleaned[-1][2]
+            rects[i] = (max_x1, avg_y1, min_x2, avg_y2)
             i += 1
 
-    print("Num Parking Lanes: ", len(rects))
+    print("Num Parking Lanes: ", len(rects)*2-2)
     # Step 5: Draw the rectangles on the image
-    buff = 7
+    buff = -5
     for key in rects:
         tup_topLeft = (int(rects[key][0] - buff), int(rects[key][1]))
         tup_botRight = (int(rects[key][2] + buff), int(rects[key][3]))
@@ -318,26 +321,28 @@ def draw_parking(image, rects, make_copy=True, color=[255, 0, 0], thickness=2, s
     gap = 60
     spot_dict = {}  # maps each parking ID to its coords
     tot_spots = 0
-    adj_y1 = {0: 20, 1: -10, 2: 0, 3: -11, 4: 28, 5: 5,
-              6: -15, 7: -15, 8: -10, 9: -30, 10: 9, 11: -32}
-    adj_y2 = {0: 30, 1: 50, 2: 15, 3: 10, 4: -15, 5: 15,
-              6: 15, 7: -20, 8: 15, 9: 15, 10: 0, 11: 30}
-
-    adj_x1 = {0: -8, 1: -15, 2: -15, 3: -15, 4: -15, 5: -15,
-              6: -15, 7: -15, 8: -10, 9: -10, 10: -10, 11: 0}
-    adj_x2 = {0: 0, 1: 15, 2: 15, 3: 15, 4: 15, 5: 15,
-              6: 15, 7: 15, 8: 10, 9: 10, 10: 10, 11: 0}
+#    adj_y1 = {0: 20, 1: -10, 2: 0, 3: -11, 4: 28, 5: 5,
+#              6: -15, 7: -15, 8: -10, 9: -30, 10: 9, 11: -32}
+#    adj_y2 = {0: 30, 1: 50, 2: 15, 3: 10, 4: -15, 5: 15,
+#              6: 15, 7: -20, 8: 15, 9: 15, 10: 0, 11: 30}
+#
+#    adj_x1 = {0: -8, 1: -15, 2: -15, 3: -15, 4: -15, 5: -15,
+#              6: -15, 7: -15, 8: -10, 9: -10, 10: -10, 11: 0}
+#    adj_x2 = {0: 0, 1: 15, 2: 15, 3: 15, 4: 15, 5: 15,
+#              6: 15, 7: 15, 8: 10, 9: 10, 10: 10, 11: 0}
     for key in rects:
         # Horizontal lines
         tup = rects[key]
-        x1 = int(tup[0] + adj_x1[key])
-        x2 = int(tup[2] + adj_x2[key])
-        y1 = int(tup[1] + adj_y1[key])
-        y2 = int(tup[3] + adj_y2[key])
-#        x1 = int(tup[0])
-#        x2 = int(tup[2])
-#        y1 = int(tup[1])
-#        y2 = int(tup[3])
+#        x1 = int(tup[0] + adj_x1[key])
+#        x2 = int(tup[2] + adj_x2[key])
+#        y1 = int(tup[1] + adj_y1[key])
+#        y2 = int(tup[3] + adj_y2[key])
+        x1 = int(tup[0])
+        x2 = int(tup[2])
+        y1 = int(tup[1])
+        y2 = int(tup[3])
+        gap = int(abs(y2-y1)//10)
+        
         cv2.rectangle(new_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
         num_splits = int(abs(y2-y1)//gap)
         for i in range(0, num_splits+1):
@@ -347,11 +352,14 @@ def draw_parking(image, rects, make_copy=True, color=[255, 0, 0], thickness=2, s
             # draw vertical lines
             x = int((x1 + x2)/2)
             cv2.line(new_image, (x, y1), (x, y2), color, thickness)
+            
         # Add up spots in this lane
         if key == 0 or key == (len(rects) - 1):
             tot_spots += num_splits + 1
         else:
             tot_spots += 2*(num_splits + 1)
+
+        global cur_len
 
         # Dictionary of spot positions
         if key == 0 or key == (len(rects) - 1):
@@ -386,24 +394,24 @@ show_image(new_image)
 
 
 # %%
-#final_spot_dict = spot_pos[0]
+final_spot_dict = spot_dict
 
 
 # %%
-# print(len(final_spot_dict))
+print(len(final_spot_dict))
 
 
 # %%
-# def assign_spots_map(image, spot_dict=final_spot_dict, make_copy = True, color=[255, 0, 0], thickness=2):
-#    if make_copy:
-#        new_image = np.copy(image)
-#    for spot in spot_dict.keys():
-#        (x1, y1, x2, y2) = spot
-#        cv2.rectangle(new_image, (int(x1),int(y1)), (int(x2),int(y2)), color, thickness)
-#    return new_image
-#
-#marked_spot_images = list(map(assign_spots_map, test_images))
-# show_image(marked_spot_images)
+def assign_spots_map(image, spot_dict=final_spot_dict, make_copy = True, color=[255, 0, 0], thickness=2):
+    if make_copy:
+        new_image = np.copy(image)
+    for spot in spot_dict.keys():
+        (x1, y1, x2, y2) = spot
+        cv2.rectangle(new_image, (int(x1),int(y1)), (int(x2),int(y2)), color, thickness)
+    return new_image
+
+marked_spot_image = assign_spots_map(image)
+show_image(marked_spot_image)
 
 
 # %%
