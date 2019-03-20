@@ -51,15 +51,14 @@ def show_image(image, cmap=None):
 
 # %%
 test_images = [plt.imread(path) for path in glob.glob('test_images/*.jpg')]
-image = test_images[0]
-MAX_KERNEL_LENGTH = 10
+lot_image = test_images[0]
 
 # show_image(image)
 
 #Resize and blur
 kernel_size = 3
 #image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
-image = resize(image, 720)
+lot_image = resize(lot_image, 720)
 
 # resize input image (1280x720 should be fined)
 # for index, t_image in enumerate(test_images):
@@ -97,7 +96,7 @@ def select_rgb_white_yellow(image):
     return masked
 
 
-white_yellow_image = select_rgb_white_yellow(image)
+white_yellow_image = select_rgb_white_yellow(lot_image)
 # show_image(white_yellow_image)
 
 
@@ -175,7 +174,7 @@ def select_region(image):
 
 # images showing the region of interest only
 roi_image = select_region(edge_image)
-show_image(roi_image)
+#show_image(roi_image)
 
 # %% [markdown]
 # ### Hough line transform
@@ -215,8 +214,8 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
 # for image, lines in zip(test_images, list_of_lines):
 #    line_images.append(draw_lines(image, lines))
 
-line_image, cleaned = draw_lines(image, lines)
-show_image(line_image)
+line_image, cleaned = draw_lines(lot_image, lines)
+#show_image(line_image)
 
 # %% [markdown]
 # Identify rectangular blocks of parking
@@ -302,8 +301,8 @@ def identify_blocks(image, lines, make_copy=True):
 #    rect_coords.append(rects)
 
 
-new_image, rects = identify_blocks(image, lines)
-show_image(new_image)
+new_image, rects = identify_blocks(lot_image, lines)
+#show_image(new_image)
 
 # %% [markdown]
 # ### Identify each spot and count num of parking spaces
@@ -315,7 +314,8 @@ show_image(new_image)
 # %%
 
 
-def draw_parking(image, rects, make_copy=True, color=[255, 0, 0], thickness=2, save=False):
+def draw_parking(image, rects, make_copy=True, 
+                 color=[255, 0, 0], thickness=2, save=True):
     if make_copy:
         new_image = np.copy(image)
     gap = 60
@@ -355,20 +355,18 @@ def draw_parking(image, rects, make_copy=True, color=[255, 0, 0], thickness=2, s
             
         # Add up spots in this lane
         if key == 0 or key == (len(rects) - 1):
-            tot_spots += num_splits + 1
+            tot_spots += num_splits
         else:
-            tot_spots += 2*(num_splits + 1)
-
-        global cur_len
+            tot_spots += 2*num_splits
 
         # Dictionary of spot positions
         if key == 0 or key == (len(rects) - 1):
-            for i in range(0, num_splits+1):
+            for i in range(0, num_splits):
                 cur_len = len(spot_dict)
                 y = int(y1 + i*gap)
                 spot_dict[(x1, y, x2, y+gap)] = cur_len + 1
         else:
-            for i in range(0, num_splits+1):
+            for i in range(0, num_splits):
                 cur_len = len(spot_dict)
                 y = int(y1 + i*gap)
                 x = int((x1 + x2)/2)
@@ -389,8 +387,8 @@ def draw_parking(image, rects, make_copy=True, color=[255, 0, 0], thickness=2, s
 #    spot_pos.append(spot_dict)
 
 
-new_image, spot_dict = draw_parking(image, rects)
-show_image(new_image)
+new_image, spot_dict = draw_parking(lot_image, rects)
+#show_image(new_image)
 
 
 # %%
@@ -410,7 +408,7 @@ def assign_spots_map(image, spot_dict=final_spot_dict, make_copy = True, color=[
         cv2.rectangle(new_image, (int(x1),int(y1)), (int(x2),int(y2)), color, thickness)
     return new_image
 
-marked_spot_image = assign_spots_map(image)
+marked_spot_image = assign_spots_map(lot_image)
 show_image(marked_spot_image)
 
 
@@ -449,81 +447,82 @@ show_image(marked_spot_image)
 # Imports for making predictions
 #from PIL import Image
 #from keras.applications.imagenet_utils import preprocess_input
-#from keras.models import load_model
+from keras.models import load_model
 #from keras.preprocessing import image
 
 
 # %%
-#cwd = os.getcwd()
-#top_model_weights_path = 'car1.h5'
-#
-#class_dictionary = {}
-#class_dictionary[0] = 'empty'
-#class_dictionary[1] = 'occupied'
+cwd = os.getcwd()
+top_model_weights_path = 'car1.h5'
+
+class_dictionary = {}
+class_dictionary[0] = 'empty'
+class_dictionary[1] = 'occupied'
 
 
 # %%
 #from PIL import Image
-#model = load_model(top_model_weights_path)
+model = load_model(top_model_weights_path)
+#model.summary()
 
 
 # %%
-# def make_prediction(image):
-#    #Rescale image
-#    img = image/255.
-#
-#    #Convert to a 4D tensor
-#    image = np.expand_dims(img, axis=0)
-#    #print(image.shape)
-#
-#    # make predictions on the preloaded model
-#    class_predicted = model.predict(image)
-#    inID = np.argmax(class_predicted[0])
-#    label = class_dictionary[inID]
-#    return label
+def make_prediction(spot_image):
+    #Rescale image
+    img = spot_image/255.
+
+    #Convert to a 4D tensor
+    spot_image = np.expand_dims(img, axis=0)
+    #print(image.shape)
+
+    # make predictions on the preloaded model
+    class_predicted = model.predict(spot_image)
+    inID = np.argmax(class_predicted[0])
+    label = class_dictionary[inID]
+    return label
 
 
 # %%
-# def predict_on_image(image, spot_dict = final_spot_dict, make_copy=True, color = [0, 255, 0], alpha=0.5):
-#    if make_copy:
-#        new_image = np.copy(image)
-#        overlay = np.copy(image)
-#    cnt_empty = 0
-#    all_spots = 0
-#    for spot in spot_dict.keys():
-#        all_spots += 1
-#        (x1, y1, x2, y2) = spot
-#        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
-#        #crop this image
-#        spot_img = image[y1:y2, x1:x2]
-#        spot_img = cv2.resize(spot_img, (48, 48))
-#
-#        label = make_prediction(spot_img)
-# print(label)
-#        if label == 'empty':
-#            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), color, -1)
-#            cnt_empty += 1
-#
-#    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
-#
-#    cv2.putText(new_image, "Available: %d spots" %cnt_empty, (30, 95),
-#    cv2.FONT_HERSHEY_SIMPLEX,
-#    0.7, (255, 255, 255), 2)
-#
-#    cv2.putText(new_image, "Total: %d spots" %all_spots, (30, 125),
-#    cv2.FONT_HERSHEY_SIMPLEX,
-#    0.7, (255, 255, 255), 2)
-#    save = False
-#
-#    if save:
-#        filename = 'with_marking.jpg'
-#        cv2.imwrite(filename, new_image)
-#
-#    return new_image
-#
-#
-#predicted_images = list(map(predict_on_image, test_images))
-# show_image(predicted_images)
+def predict_on_image(image, spot_dict = final_spot_dict, 
+                     make_copy=True, color = [0, 255, 0], alpha=0.5,
+                     save=True):
+    if make_copy:
+        new_image = np.copy(image)
+        overlay = np.copy(image)
+    cnt_empty = 0
+    all_spots = 0
+    for spot in spot_dict.keys():
+        all_spots += 1
+        (x1, y1, x2, y2) = spot
+        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+        #crop this image
+        spot_img = image[y1:y2, x1:x2]
+        spot_img = cv2.resize(spot_img, (48, 48))
+
+        label = make_prediction(spot_img)
+#        print(label)
+        if label == 'empty':
+            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), color, -1)
+            cnt_empty += 1
+
+    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
+
+    cv2.putText(new_image, "Available: %d spots" %cnt_empty, (30, 95),
+    cv2.FONT_HERSHEY_SIMPLEX,
+    0.7, (255, 255, 255), 2)
+
+    cv2.putText(new_image, "Total: %d spots" %all_spots, (30, 125),
+    cv2.FONT_HERSHEY_SIMPLEX,
+    0.7, (255, 255, 255), 2)
+
+    if save:
+        filename = 'with_marking.jpg'
+        cv2.imwrite(filename, new_image)
+
+    return new_image
+
+predicted_image = predict_on_image(lot_image)
+show_image(predicted_image)
 
 # %% [markdown]
 # Run code on video
