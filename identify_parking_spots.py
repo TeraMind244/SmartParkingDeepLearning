@@ -116,7 +116,7 @@ def detect_edges(image, low_threshold=20, high_threshold=150):
 
 
 edge_image = detect_edges(gray_image)
-#show_image(edge_image)
+show_image(edge_image)
 
 # %% [markdown]
 # ### Identify area of interest
@@ -191,7 +191,7 @@ def hough_lines(image):
 #    return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
 #                           threshold=15, minLineLength=9, maxLineGap=4)
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=10, minLineLength=40, maxLineGap=40)
+                           threshold=10, minLineLength=30, maxLineGap=40)
 
 lines = hough_lines(roi_image)
 
@@ -215,7 +215,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
 #    line_images.append(draw_lines(image, lines))
 
 line_image, cleaned = draw_lines(lot_image, lines)
-#show_image(line_image)
+show_image(line_image)
 
 # %% [markdown]
 # Identify rectangular blocks of parking
@@ -318,7 +318,7 @@ def draw_parking(image, rects, make_copy=True,
                  color=[255, 0, 0], thickness=2, save=True):
     if make_copy:
         new_image = np.copy(image)
-    gap = 60
+    gap = 65
     spot_dict = {}  # maps each parking ID to its coords
     tot_spots = 0
 #    adj_y1 = {0: 20, 1: -10, 2: 0, 3: -11, 4: 28, 5: 5,
@@ -341,7 +341,7 @@ def draw_parking(image, rects, make_copy=True,
         x2 = int(tup[2])
         y1 = int(tup[1])
         y2 = int(tup[3])
-        gap = int(abs(y2-y1)//10)
+#        gap = int(abs(y2-y1)//10)
         
         cv2.rectangle(new_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
         num_splits = int(abs(y2-y1)//gap)
