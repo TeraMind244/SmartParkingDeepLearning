@@ -201,6 +201,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
     # the lines returned by cv2.HoughLinesP has the shape (-1, 1, 4)
     if make_copy:
         image = np.copy(image)  # don't want to modify the original
+    global cleaned
     cleaned = []
     for line in lines:
         for x1, y1, x2, y2 in line:

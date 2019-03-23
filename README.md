@@ -2,7 +2,7 @@
 
 Contents:
 
-1. test_images: Two sample images to train the code on
+1. test_images: Sample image to train the code on
 
 2. train_data: Training data for CNN model
 

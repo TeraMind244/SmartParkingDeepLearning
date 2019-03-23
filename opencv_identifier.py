@@ -12,12 +12,18 @@ from keras.models import load_model
 # %% 
 # ### Initial value
 
-top_model_weights_path = 'car1.h5'
-    
 class_dictionary = {}
 class_dictionary[0] = 'empty'
 class_dictionary[1] = 'occupied'
+
+pt_array = [[276, 22],
+            [1060, 15],
+            [1111, 680],
+            [254, 692]]
+
 cwd = os.getcwd()
+
+model = load_model('car1.h5')
 
 # %%
 def resize(image, v_height):
@@ -25,6 +31,17 @@ def resize(image, v_height):
     scale = v_height / height
     (newX, newY) = (width*scale, height*scale)
     return cv2.resize(image, (int(newX), int(newY)))
+
+# %%
+
+def show_image(image, cmap=None):
+    plt.figure(figsize=(15, 12))
+    plt.subplot(1, 1, 1)
+    # use gray scale color map if there is only one channel
+    cmap = 'gray' if len(image.shape) == 2 else cmap
+    plt.imshow(image, cmap=cmap)
+    plt.xticks([])
+    plt.yticks([])
 
 # %%
 
@@ -65,20 +82,15 @@ def filter_region(image, vertices):
         cv2.fillPoly(mask, vertices, (255,)*mask.shape[2])
     return cv2.bitwise_and(image, mask)
 
-
 def select_region(image):
     """
     It keeps the region surrounded by the `vertices` (i.e. polygon).  Other area is set to 0 (black).
     """
     # rows, cols = image.shape[:2]
-    pt_array = [[276, 22],
-                [1060, 15],
-                [1111, 680],
-                [254, 692]]
+    
     # the vertices are an array of polygons (i.e array of arrays) and the data type must be integer
     vertices = np.array([pt_array], dtype=np.int32)
     return filter_region(image, vertices)
-
 
 # %% [markdown]
 # ### Hough line transform
@@ -100,6 +112,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
     # the lines returned by cv2.HoughLinesP has the shape (-1, 1, 4)
     if make_copy:
         image = np.copy(image)  # don't want to modify the original
+    global cleaned
     cleaned = []
     for line in lines:
         for x1, y1, x2, y2 in line:
@@ -119,11 +132,10 @@ def identify_blocks(image, lines, make_copy=True):
     if make_copy:
         new_image = np.copy(image)
     # Step 1: Create a clean list of lines
-    cleaned = {}
 
     # Step 2: Sort cleaned by x1 position
     import operator
-    global sorted_lines
+    global sorted_lines, cleaned
 
     sorted_lines = sorted(cleaned, key=operator.itemgetter(0, 1))
 
@@ -185,6 +197,7 @@ def draw_parking(image, rects, make_copy=True,
     gap = 65
     spot_dict = {}  # maps each parking ID to its coords
     tot_spots = 0
+    cur_len = 0
     for key in rects:
         # Horizontal lines
         tup = rects[key]
@@ -241,17 +254,6 @@ def assign_spots_map(image, spot_dict, make_copy = True, color=[255, 0, 0], thic
         cv2.rectangle(new_image, (int(x1),int(y1)), (int(x2),int(y2)), color, thickness)
     return new_image
 
-
-# %% [markdown]
-# ### Use trained CNN model to make predictions
-
-# %%
-
-
-# %%
-def get_model():
-    return load_model(top_model_weights_path)
-
 # %%
 def make_prediction(spot_image):
     #Rescale image
@@ -276,6 +278,9 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
         overlay = np.copy(image)
     cnt_empty = 0
     all_spots = 0
+    
+    list_slots = []
+    
     for spot in spot_dict.keys():
         all_spots += 1
         (x1, y1, x2, y2) = spot
@@ -285,6 +290,11 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
         spot_img = cv2.resize(spot_img, (48, 48))
 
         label = make_prediction(spot_img)
+        
+        slot = {'id':spot_dict[spot],
+                'status': label}
+        list_slots.append(slot)
+        
 #        print(label)
         if label == 'empty':
             cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), color, -1)
@@ -304,21 +314,24 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
         filename = 'with_marking.jpg'
         cv2.imwrite(filename, new_image)
 
-    return new_image
+    return new_image, list_slots
+
+def get_first_image(path):
+    test_images = [plt.imread(path) for path in glob.glob(path)]
+    return test_images[0]
 
 def identify_parking_spot(image):
-    test_images = [plt.imread(path) for path in glob.glob('test_images/*.jpg')]
-    lot_image = test_images[0]
-    
-    # show_image(image)
-    
+    lot_image = image
+#    lot_image = get_first_image('test_images/*.jpg')
+#    print(lot_image)
+#    lot_image = image
+
     #Resize and blur
     #kernel_size = 3
     #image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
-    lot_image = resize(lot_image, 720)
+    resized_image = resize(lot_image, 720)
     
-    
-    white_yellow_image = select_rgb_white_yellow(lot_image)
+    white_yellow_image = select_rgb_white_yellow(resized_image)
     gray_image = convert_gray_scale(white_yellow_image)
     edge_image = detect_edges(gray_image)
     
@@ -326,19 +339,18 @@ def identify_parking_spot(image):
     
     lines = hough_lines(roi_image)
     
-    line_image, cleaned = draw_lines(lot_image, lines)
+    line_image, cleaned = draw_lines(resized_image, lines)
     
-    new_image, rects = identify_blocks(lot_image, lines)
+    blocked_image, rects = identify_blocks(resized_image, lines)
     
-    new_image, spot_dict = draw_parking(lot_image, rects)
-    
+    parking_slot_image, spot_dict = draw_parking(resized_image, rects)
+    global final_spot_dict
     final_spot_dict = spot_dict
-    
-    global model
-    model = get_model()
-    
+
 #    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
-    predicted_image = predict_on_image(lot_image, spot_dict=final_spot_dict)
+    predicted_image, slots = predict_on_image(resized_image, spot_dict=final_spot_dict)
     
-    return predicted_image
+    #TODO return list of spots
+    return slots
     
+#show_image(identify_parking_spot({}))
