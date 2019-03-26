@@ -56,8 +56,10 @@ lot_image = test_images[0]
 # show_image(image)
 
 #Resize and blur
-kernel_size = 3
-#image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
+kernel_size = 37
+lot_image = cv2.bilateralFilter(lot_image, 
+                                kernel_size, kernel_size * 2, 
+                                kernel_size / 2)
 lot_image = resize(lot_image, 720)
 
 # resize input image (1280x720 should be fined)
@@ -72,7 +74,7 @@ lot_image = resize(lot_image, 720)
 # for i in range(1, 3, 2):
 #    dst = cv2.blur(image, (i, i))
 
-# show_image(image)
+show_image(lot_image)
 
 # %% [markdown]
 # ### Color Selection and Edge Detection
@@ -97,7 +99,7 @@ def select_rgb_white_yellow(image):
 
 
 white_yellow_image = select_rgb_white_yellow(lot_image)
-# show_image(white_yellow_image)
+#show_image(white_yellow_image)
 
 
 # %%
@@ -106,7 +108,7 @@ def convert_gray_scale(image):
 
 
 gray_image = convert_gray_scale(white_yellow_image)
-# show_image(gray_image)
+#show_image(gray_image)
 
 # %%
 
@@ -116,7 +118,7 @@ def detect_edges(image, low_threshold=20, high_threshold=150):
 
 
 edge_image = detect_edges(gray_image)
-show_image(edge_image)
+#show_image(edge_image)
 
 # %% [markdown]
 # ### Identify area of interest
@@ -153,20 +155,14 @@ def select_region(image):
 #    vertices = np.array([[pt_1, pt_2, pt_3, pt_4, pt_5, pt_6]], dtype=np.int32)
 #    return filter_region(image, vertices)
     rows, cols = image.shape[:2]
-#    pt_array = [[cols*0.05, rows*0.90],
-#                [cols*0.05, rows*0.70],
-#                [cols*0.30, rows*0.55],
-#                [cols*0.6, rows*0.15],
-#                [cols*0.90, rows*0.15],
-#                [cols*0.90, rows*0.90]]
-#    pt_array = [[cols*0.21, rows*0.38],
-#                [cols*0.10, rows*0.03],
-#                [cols*0.99, rows*0.03],
-#                [cols*0.99, rows*0.99]]
-    pt_array = [[276, 22],
-                [1060, 15],
-                [1111, 680],
-                [254, 692]]
+#    pt_array = [[276, 22],
+#                [1060, 15],
+#                [1111, 680],
+#                [254, 692]]
+    pt_array= [[312, 26],
+               [1110, 30],
+               [1117, 696],
+               [308, 690]]
     # the vertices are an array of polygons (i.e array of arrays) and the data type must be integer
     vertices = np.array([pt_array], dtype=np.int32)
     return filter_region(image, vertices)
@@ -174,7 +170,7 @@ def select_region(image):
 
 # images showing the region of interest only
 roi_image = select_region(edge_image)
-#show_image(roi_image)
+show_image(roi_image)
 
 # %% [markdown]
 # ### Hough line transform
@@ -303,7 +299,7 @@ def identify_blocks(image, lines, make_copy=True):
 
 
 new_image, rects = identify_blocks(lot_image, lines)
-#show_image(new_image)
+show_image(new_image)
 
 # %% [markdown]
 # ### Identify each spot and count num of parking spaces

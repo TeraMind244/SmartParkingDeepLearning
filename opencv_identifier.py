@@ -12,6 +12,8 @@ from keras.models import load_model
 # %% 
 # ### Initial value
 
+cleaned = {}
+
 class_dictionary = {}
 class_dictionary[0] = 'empty'
 class_dictionary[1] = 'occupied'
@@ -180,6 +182,17 @@ def identify_blocks(image, lines, make_copy=True):
         cv2.rectangle(new_image, tup_topLeft, tup_botRight, (0, 255, 0), 3)
     return new_image, rects
 
+# %%
+def int_to_letter(i):
+    lane = ''
+    if i > 0:
+        while True:
+            mod = (i - 1) % 26
+            lane = chr(mod + 65) + lane
+            i = (i - mod + 1) // 26
+            if i <= 0:
+                break
+    return lane
 
 # %% [markdown]
 # ### Identify each spot and count num of parking spaces
@@ -197,8 +210,13 @@ def draw_parking(image, rects, make_copy=True,
     gap = 65
     spot_dict = {}  # maps each parking ID to its coords
     tot_spots = 0
-    cur_len = 0
+    
+    lane_num = 0
+    
     for key in rects:
+        lane_num += 1
+        lane1 = int_to_letter(lane_num)
+        lane2 = int_to_letter(lane_num + 1)
         # Horizontal lines
         tup = rects[key]
         x1 = int(tup[0])
@@ -226,23 +244,24 @@ def draw_parking(image, rects, make_copy=True,
         # Dictionary of spot positions
         if key == 0 or key == (len(rects) - 1):
             for i in range(0, num_splits):
-                cur_len = len(spot_dict)
                 y = int(y1 + i*gap)
-                spot_dict[(x1, y, x2, y+gap)] = cur_len + 1
+                spot_dict[(x1, y, x2, y+gap)] = {'row': i + 1,
+                                                  'lane': lane1}
         else:
             for i in range(0, num_splits):
-                cur_len = len(spot_dict)
                 y = int(y1 + i*gap)
                 x = int((x1 + x2)/2)
-                spot_dict[(x1, y, x, y+gap)] = cur_len + 1
-                spot_dict[(x, y, x2, y+gap)] = cur_len + 2
+                spot_dict[(x1, y, x, y+gap)] = {'row': i + 1,
+                                                  'lane': lane1}
+                spot_dict[(x, y, x2, y+gap)] = {'row': i + 1,
+                                                  'lane': lane2}
+            lane_num += 1
 
-    print("total parking spaces: ", tot_spots, cur_len)
+    print("total parking spaces: ", tot_spots)
     if save:
         filename = 'with_parking.jpg'
         cv2.imwrite(filename, new_image)
     return new_image, spot_dict
-
 
 # %%
 
@@ -291,7 +310,8 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
 
         label = make_prediction(spot_img)
         
-        slot = {'id':spot_dict[spot],
+        slot = {'row': spot_dict[spot]['row'],
+                'lane': spot_dict[spot]['lane'],
                 'status': label}
         list_slots.append(slot)
         
@@ -349,8 +369,7 @@ def identify_parking_spot(image):
 
 #    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
     predicted_image, slots = predict_on_image(resized_image, spot_dict=final_spot_dict)
-    
-    #TODO return list of spots
+
     return slots
     
-#show_image(identify_parking_spot({}))
+#show_image(identify_parking_spot(get_first_image('test_images/*.jpg')))
