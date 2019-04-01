@@ -488,20 +488,20 @@ def identify_parking_spot(image):
 
 # %%
     
-def get_data(spot_dict):
-    all_spots = 0
-    cnt_empty = 0
-    for spot in spot_dict.keys():
-        all_spots += 1
-        (x1, y1, x2, y2) = spot
-        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
-        #crop this image
-        spot_img = image[y1:y2, x1:x2]
-        spot_img = cv2.resize(spot_img, (48, 48))
-
-        label = make_prediction(spot_img)
-        
-#        print(label)
-        if label == 'empty':
-            cnt_empty += 1
-    return all_spots, cnt_empty
+#def get_data(spot_dict):
+#    all_spots = 0
+#    cnt_empty = 0
+#    for spot in spot_dict.keys():
+#        all_spots += 1
+#        (x1, y1, x2, y2) = spot
+#        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+#        #crop this image
+#        spot_img = image[y1:y2, x1:x2]
+#        spot_img = cv2.resize(spot_img, (48, 48))
+#
+#        label = make_prediction(spot_img)
+#        
+##        print(label)
+#        if label == 'empty':
+#            cnt_empty += 1
+#    return all_spots, cnt_empty

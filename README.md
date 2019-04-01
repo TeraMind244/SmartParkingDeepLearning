@@ -49,4 +49,6 @@ conda install flask
 
 ### Run
 
-1. Run main.py to feel the magic
+1. Run CNN_model_for_occupancy.py to start training model. Make sure you find car1.h5 after training process.
+
+2. Run main.py to feel the magic.
