@@ -482,7 +482,7 @@ def make_prediction(spot_image):
 # %%
 def predict_on_image(image, spot_dict = final_spot_dict, 
                      make_copy=True, color = [0, 255, 0], alpha=0.5,
-                     save=True):
+                     save=False):
     if make_copy:
         new_image = np.copy(image)
         overlay = np.copy(image)

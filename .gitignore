@@ -4,3 +4,12 @@ with_parking.jpg
 *.mp4
 __pycache__
 *.pickle
+templates
+*.ipynb
+pic
+CNN_model_for_occupancy.py
+identify_parking_spots.py
+testFlask.py
+test_image.py
+webcamDetection.py
+api.py

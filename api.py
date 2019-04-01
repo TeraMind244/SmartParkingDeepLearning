@@ -15,7 +15,7 @@ def get_lot():
     spots = {'message': 'error'}
     try:
         imageStr = request.files.get('lot-image', '').read()
-        npimg = np.fromstring(imageStr, np.uint8)
+        npimg = np.frombuffer(imageStr, np.uint8)
         img = cv2.imdecode(npimg, -1)
         spots = opencv.identify_parking_spot(img)
     except Exception as err:

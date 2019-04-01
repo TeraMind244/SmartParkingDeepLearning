@@ -6,6 +6,7 @@ import cv2
 import os
 import glob
 import numpy as np
+#import time
 # Imports for making predictions
 from keras.models import load_model
 
@@ -26,6 +27,9 @@ pt_array = [[276, 22],
 cwd = os.getcwd()
 
 model = load_model('car1.h5')
+
+#with keras.backend.get_session().graph.as_default():
+#    model = load_model("sunshade/neural_network/model.h5")
 
 # %%
 def resize(image, v_height):
@@ -334,15 +338,15 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
         filename = 'with_marking.jpg'
         cv2.imwrite(filename, new_image)
 
-    return new_image, list_slots
+    return new_image, list_slots, cnt_empty, all_spots
 
 def get_first_image(path):
     test_images = [plt.imread(path) for path in glob.glob(path)]
     return test_images[0]
 
 def identify_parking_spot(image):
-    lot_image = image
-#    lot_image = get_first_image('test_images/*.jpg')
+#    lot_image = image
+    lot_image = get_first_image('test_images/*.jpg')
 #    print(lot_image)
 #    lot_image = image
 
@@ -368,8 +372,136 @@ def identify_parking_spot(image):
     final_spot_dict = spot_dict
 
 #    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
-    predicted_image, slots = predict_on_image(resized_image, spot_dict=final_spot_dict)
-
-    return slots
+    predicted_image, slots, cnt_empty, all_spots = predict_on_image(resized_image, spot_dict=final_spot_dict)
+    
+    return predicted_image, cnt_empty, all_spots
     
 #show_image(identify_parking_spot(get_first_image('test_images/*.jpg')))
+    
+# %%
+
+#def test_return_image(image):
+#    spot_dict = {(267, 30, 410, 95): {'row': 1, 'lane': 'A'}, 
+#                 (267, 95, 410, 160): {'row': 2, 'lane': 'A'}, 
+#                 (267, 160, 410, 225): {'row': 3, 'lane': 'A'}, 
+#                 (267, 225, 410, 290): {'row': 4, 'lane': 'A'}, 
+#                 (267, 290, 410, 355): {'row': 5, 'lane': 'A'}, 
+#                 (267, 355, 410, 420): {'row': 6, 'lane': 'A'}, 
+#                 (267, 420, 410, 485): {'row': 7, 'lane': 'A'}, 
+#                 (267, 485, 410, 550): {'row': 8, 'lane': 'A'}, 
+#                 (267, 550, 410, 615): {'row': 9, 'lane': 'A'}, 
+#                 (267, 615, 410, 680): {'row': 10, 'lane': 'A'}, 
+#                 (534, 31, 671, 96): {'row': 1, 'lane': 'B'}, 
+#                 (671, 31, 808, 96): {'row': 1, 'lane': 'C'}, 
+#                 (534, 96, 671, 161): {'row': 2, 'lane': 'B'}, 
+#                 (671, 96, 808, 161): {'row': 2, 'lane': 'C'}, 
+#                 (534, 161, 671, 226): {'row': 3, 'lane': 'B'}, 
+#                 (671, 161, 808, 226): {'row': 3, 'lane': 'C'}, 
+#                 (534, 226, 671, 291): {'row': 4, 'lane': 'B'}, 
+#                 (671, 226, 808, 291): {'row': 4, 'lane': 'C'}, 
+#                 (534, 291, 671, 356): {'row': 5, 'lane': 'B'}, 
+#                 (671, 291, 808, 356): {'row': 5, 'lane': 'C'}, 
+#                 (534, 356, 671, 421): {'row': 6, 'lane': 'B'}, 
+#                 (671, 356, 808, 421): {'row': 6, 'lane': 'C'}, 
+#                 (534, 421, 671, 486): {'row': 7, 'lane': 'B'}, 
+#                 (671, 421, 808, 486): {'row': 7, 'lane': 'C'}, 
+#                 (534, 486, 671, 551): {'row': 8, 'lane': 'B'}, 
+#                 (671, 486, 808, 551): {'row': 8, 'lane': 'C'}, 
+#                 (534, 551, 671, 616): {'row': 9, 'lane': 'B'}, 
+#                 (671, 551, 808, 616): {'row': 9, 'lane': 'C'}, 
+#                 (534, 616, 671, 681): {'row': 10, 'lane': 'B'}, 
+#                 (671, 616, 808, 681): {'row': 10, 'lane': 'C'}, 
+#                 (935, 33, 1076, 98): {'row': 1, 'lane': 'D'}, 
+#                 (935, 98, 1076, 163): {'row': 2, 'lane': 'D'}, 
+#                 (935, 163, 1076, 228): {'row': 3, 'lane': 'D'}, 
+#                 (935, 228, 1076, 293): {'row': 4, 'lane': 'D'}, 
+#                 (935, 293, 1076, 358): {'row': 5, 'lane': 'D'}, 
+#                 (935, 358, 1076, 423): {'row': 6, 'lane': 'D'}, 
+#                 (935, 423, 1076, 488): {'row': 7, 'lane': 'D'}, 
+#                 (935, 488, 1076, 553): {'row': 8, 'lane': 'D'}, 
+#                 (935, 553, 1076, 618): {'row': 9, 'lane': 'D'}}
+#    
+#    list_slots = []
+#    all_spots = 0
+#    cnt_empty = 0
+#    new_image = np.copy(image)
+#    overlay = np.copy(image)
+#    color=[0, 255, 0]
+#    alpha=0.5
+#    
+#    for spot in spot_dict.keys():
+#        all_spots += 1
+#        (x1, y1, x2, y2) = spot
+#        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+#        #crop this image
+#        spot_img = image[y1:y2, x1:x2]
+#        spot_img = cv2.resize(spot_img, (48, 48))
+#
+#        label = make_prediction(spot_img)
+#        
+#        slot = {'row': spot_dict[spot]['row'],
+#                'lane': spot_dict[spot]['lane'],
+#                'status': label}
+#        list_slots.append(slot)
+#        
+##        print(label)
+#        if label == 'empty':
+#            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), 
+#                          color, -1)
+#            cnt_empty += 1
+#            
+#    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
+#    return overlay, all_spots, cnt_empty
+
+# %%
+    
+#lot_image = image
+#lot_image = get_first_image('test_images/*.jpg')
+##    print(lot_image)
+##    lot_image = image
+#
+#    #Resize and blur
+#    #kernel_size = 3
+#    #image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
+#resized_image = resize(lot_image, 720)
+#
+#white_yellow_image = select_rgb_white_yellow(resized_image)
+#gray_image = convert_gray_scale(white_yellow_image)
+#edge_image = detect_edges(gray_image)
+#
+#roi_image = select_region(edge_image)
+#
+#lines = hough_lines(roi_image)
+#
+#line_image, cleaned = draw_lines(resized_image, lines)
+#
+#blocked_image, rects = identify_blocks(resized_image, lines)
+#
+#parking_slot_image, spot_dict = draw_parking(resized_image, rects)
+#global final_spot_dict
+#final_spot_dict = spot_dict
+#
+##    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
+#predicted_image, slots = predict_on_image(resized_image, spot_dict=final_spot_dict)
+
+#return slots
+
+# %%
+    
+def get_data(spot_dict):
+    all_spots = 0
+    cnt_empty = 0
+    for spot in spot_dict.keys():
+        all_spots += 1
+        (x1, y1, x2, y2) = spot
+        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+        #crop this image
+        spot_img = image[y1:y2, x1:x2]
+        spot_img = cv2.resize(spot_img, (48, 48))
+
+        label = make_prediction(spot_img)
+        
+#        print(label)
+        if label == 'empty':
+            cnt_empty += 1
+    return all_spots, cnt_empty
