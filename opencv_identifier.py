@@ -1,9 +1,9 @@
 
 # %%
-from __future__ import division
+#from __future__ import division
 import matplotlib.pyplot as plt
 import cv2
-import os
+#import os
 import glob
 import numpy as np
 #import time
@@ -19,12 +19,12 @@ class_dictionary = {}
 class_dictionary[0] = 'empty'
 class_dictionary[1] = 'occupied'
 
-pt_array = [[276, 22],
-            [1060, 15],
-            [1111, 680],
-            [254, 692]]
+pt_array = [[242, 12],
+            [1066, 7],
+            [1083, 700],
+            [237, 700]]
 
-cwd = os.getcwd()
+#cwd = os.getcwd()
 
 model = load_model('car1.h5')
 
@@ -69,7 +69,6 @@ def select_rgb_white_yellow(image):
 # %%
 def convert_gray_scale(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
 
 # %%
 def detect_edges(image, low_threshold=20, high_threshold=150):
@@ -208,7 +207,7 @@ def int_to_letter(i):
 # %%
 
 def draw_parking(image, rects, make_copy=True, 
-                 color=[255, 0, 0], thickness=2, save=True):
+                 color=[255, 0, 0], thickness=2, save=False):
     if make_copy:
         new_image = np.copy(image)
     gap = 65
@@ -296,16 +295,16 @@ def make_prediction(spot_image):
 
 def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
                      alpha=0.5, save=False):
-    if make_copy:
-        new_image = np.copy(image)
-        overlay = np.copy(image)
-    cnt_empty = 0
-    all_spots = 0
+#    if make_copy:
+#        new_image = np.copy(image)
+#        overlay = np.copy(image)
+#    cnt_empty = 0
+#    all_spots = 0
     
     list_slots = []
     
     for spot in spot_dict.keys():
-        all_spots += 1
+#        all_spots += 1
         (x1, y1, x2, y2) = spot
         (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
         #crop this image
@@ -316,37 +315,39 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
         
         slot = {'row': spot_dict[spot]['row'],
                 'lane': spot_dict[spot]['lane'],
-                'status': label}
+                'status': label,
+                'position': spot}
         list_slots.append(slot)
         
 #        print(label)
-        if label == 'empty':
-            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), color, -1)
-            cnt_empty += 1
+#        if label == 'empty':
+#            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)), color, -1)
+#            cnt_empty += 1
 
-    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
+#    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
+#
+#    cv2.putText(new_image, "Available: %d spots" %cnt_empty, (30, 95),
+#    cv2.FONT_HERSHEY_SIMPLEX,
+#    0.7, (255, 255, 255), 2)
+#
+#    cv2.putText(new_image, "Total: %d spots" %all_spots, (30, 125),
+#    cv2.FONT_HERSHEY_SIMPLEX,
+#    0.7, (255, 255, 255), 2)
+#
+#    if save:
+#        filename = 'with_marking.jpg'
+#        cv2.imwrite(filename, new_image)
 
-    cv2.putText(new_image, "Available: %d spots" %cnt_empty, (30, 95),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    0.7, (255, 255, 255), 2)
-
-    cv2.putText(new_image, "Total: %d spots" %all_spots, (30, 125),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    0.7, (255, 255, 255), 2)
-
-    if save:
-        filename = 'with_marking.jpg'
-        cv2.imwrite(filename, new_image)
-
-    return new_image, list_slots, cnt_empty, all_spots
+    return list_slots
 
 def get_first_image(path):
     test_images = [plt.imread(path) for path in glob.glob(path)]
     return test_images[0]
 
 def identify_parking_spot(image):
+#    global lot_image, resized_image
 #    lot_image = image
-    lot_image = get_first_image('test_images/*.jpg')
+    lot_image = get_first_image('test_images/img11.jpg')
 #    print(lot_image)
 #    lot_image = image
 
@@ -358,23 +359,24 @@ def identify_parking_spot(image):
     white_yellow_image = select_rgb_white_yellow(resized_image)
     gray_image = convert_gray_scale(white_yellow_image)
     edge_image = detect_edges(gray_image)
-    
+#    show_image(edge_image)
     roi_image = select_region(edge_image)
-    
+#    show_image(roi_image)
     lines = hough_lines(roi_image)
     
     line_image, cleaned = draw_lines(resized_image, lines)
-    
+#    show_image(line_image)
     blocked_image, rects = identify_blocks(resized_image, lines)
-    
+#    show_image(blocked_image)
     parking_slot_image, spot_dict = draw_parking(resized_image, rects)
-    global final_spot_dict
-    final_spot_dict = spot_dict
+    
+#    global final_spot_dict
+#    final_spot_dict = spot_dict
 
 #    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
-    predicted_image, slots, cnt_empty, all_spots = predict_on_image(resized_image, spot_dict=final_spot_dict)
+    list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
     
-    return predicted_image, cnt_empty, all_spots
+    return list_slots
     
 #show_image(identify_parking_spot(get_first_image('test_images/*.jpg')))
     
@@ -505,3 +507,40 @@ def identify_parking_spot(image):
 #        if label == 'empty':
 #            cnt_empty += 1
 #    return all_spots, cnt_empty
+
+#predicted_image, free, total = identify_parking_spot(None)
+#show_image(predicted_image)
+
+# %%
+
+#def save_images_for_cnn(image, spot_dict = final_spot_dict, folder_name ='for_cnn/'):
+#    for spot in spot_dict.keys():
+#        (x1, y1, x2, y2) = spot
+#        (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+#        #crop this image
+##        print(image.shape)
+#        spot_img = image[y1:y2, x1:x2]
+##        spot_img = cv2.resize(spot_img, (0,0), fx=2.0, fy=2.0)
+#        spot_id = str(spot_dict[spot]['lane']) + str(spot_dict[spot]['row'])
+#
+#        filename = 'spot' + spot_id +'.jpg'
+#        print(spot_img.shape, filename, (x1,x2,y1,y2))
+#
+#        cv2.imwrite(folder_name + filename, spot_img)
+        
+#    count = 0
+#    for spot in spot_dict.keys():
+#        if count == 0:
+#            global spot_image
+#            (x1, y1, x2, y2) = spot
+#            (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
+#            spot_image = image[y1:y2, x1:x2]
+#            spot_id = str(spot_dict[spot]['lane']) + str(spot_dict[spot]['row'])
+#            
+#            filename = 'spot' + spot_id +'.jpg'
+#            print(folder_name + filename, (x1,x2,y1,y2))
+#            
+#            cv2.imwrite(folder_name + filename, spot_image)
+#        count += 1
+        
+#save_images_for_cnn(resized_image)
