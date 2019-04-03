@@ -49,6 +49,6 @@ conda install flask=0.12.2
 
 ### Run
 
-1. Run CNN_model_for_occupancy.py to start training model. Make sure you find file `car1.h5` after training process.
+1. Run `CNN_model_for_occupancy.py` to start training model. Make sure you find file `car1.h5` after training process.
 
 2. Run `main.py` to start server. Your API should be available on http://127.0.0.1:8081/
