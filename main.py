@@ -10,14 +10,14 @@ import numpy as np
 app = Flask(__name__)
 
 list_slots = []
+message = ""
 
 def request_update(frame):
-    global list_slots
-    list_slots = opencv.identify_parking_spot(frame)
-#    try:
-#        image, all_spots, cnt_empty = opencv.test_return_image(frame)
-#    except:
-#        print("Something went wrong!")
+    global list_slots, message
+    try:
+        list_slots = opencv.identify_parking_spot(frame)
+    except:
+        message = "Something went wrong!"
 
 def add_text(image):
 
@@ -67,8 +67,6 @@ def gen(camera):
     count = 0
     while True:
         frame = camera.get_frame()
-        global cnt_empty, all_spots
-#        buffer_image = frame
         if count == 100:
             request_update(frame)
             count = 0

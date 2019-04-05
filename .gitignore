@@ -12,4 +12,5 @@ testFlask.py
 test_image.py
 webcamDetection.py
 api.py
-for_cnn
+for_cnn/*
+.pylintrc
