@@ -10,7 +10,7 @@ class VideoCamera(object):
         # Using OpenCV to capture from device 0. If you have trouble capturing
         # from a webcam, comment the line below out and use a video file
         # instead.
-        self.video = cv2.VideoCapture(1)
+        self.video = cv2.VideoCapture('outpy.avi')
 #        self.buffer_frame_in = []
 #        self.buffer_frame_out = []
 #        self.cnt_empty = 2

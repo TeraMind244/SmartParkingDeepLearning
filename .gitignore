@@ -14,3 +14,5 @@ webcamDetection.py
 api.py
 for_cnn/*
 .pylintrc
+*.avi
+test_frame.jpg

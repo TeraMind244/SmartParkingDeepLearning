@@ -18,10 +18,10 @@ class_dictionary = {}
 class_dictionary[0] = 'empty'
 class_dictionary[1] = 'occupied'
 
-pt_array = [[255, 24],
-            [1080, 24],
-            [1080, 700],
-            [255, 700]]
+pt_array = [[90, 17],
+            [920, 17],
+            [920, 700],
+            [90, 700]]
 
 height_scale = 720
 
@@ -103,8 +103,8 @@ def get_first_image(path):
 
 def identify_parking_spot(image):
 #    global lot_image, resized_image
-#    lot_image = image
-    lot_image = get_first_image('test_images/*.jpg')
+    lot_image = image
+#    lot_image = get_first_image('test_images/*.jpg')
 #    print(lot_image)
 #    lot_image = image
 
@@ -126,14 +126,15 @@ def identify_parking_spot(image):
 #    show_image(line_image)
     blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
 #    show_image(blocked_image)
-    parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects)
-    iu.show_image(parking_slot_image)
+    parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=66)
+#    iu.show_image(parking_slot_image)
 #    global final_spot_dict
 #    final_spot_dict = spot_dict
 
 #    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
     final_image, list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
-    iu.show_image(final_image)
+#    iu.show_image(final_image)
+    return list_slots
 #    return list_slots
 #identify_parking_spot(None)
 #show_image(identify_parking_spot(get_first_image('test_images/*.jpg')))
@@ -141,33 +142,33 @@ def identify_parking_spot(image):
 
 # %%
     
-lot_image = get_first_image('test_images/*.jpg')
-#    print(lot_image)
-#    lot_image = image
-
-#Resize and blur
-#kernel_size = 3
-#image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
-resized_image = iu.resize(lot_image, height_scale)
-
-white_yellow_image = iu.select_rgb_white_yellow(resized_image)
-gray_image = iu.convert_gray_scale(white_yellow_image)
-#    show_image(gray_image)
-edge_image = iu.detect_edges(gray_image)
-#    show_image(edge_image)
-roi_image = iu.select_region(edge_image, pt_array)
-#    show_image(roi_image)
-lines = iu.hough_lines(roi_image)
-
-line_image, cleaned = iu.draw_lines(resized_image, lines)
-#    show_image(line_image)
-blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
-#    show_image(blocked_image)
-parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects)
-iu.show_image(parking_slot_image)
-#    global final_spot_dict
-#    final_spot_dict = spot_dict
-
-#    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
-final_image, list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
-iu.show_image(final_image)
+#lot_image = get_first_image('test_images/*.jpg')
+##    print(lot_image)
+##    lot_image = image
+#
+##Resize and blur
+##kernel_size = 3
+##image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
+#resized_image = iu.resize(lot_image, height_scale)
+#iu.show_image(resized_image)
+#white_yellow_image = iu.select_rgb_white_yellow(resized_image)
+#gray_image = iu.convert_gray_scale(white_yellow_image)
+#iu.show_image(gray_image)
+#edge_image = iu.detect_edges(gray_image)
+#iu.show_image(edge_image)
+#roi_image = iu.select_region(edge_image, pt_array)
+#iu.show_image(roi_image)
+#lines = iu.hough_lines(roi_image)
+#
+#line_image, cleaned = iu.draw_lines(resized_image, lines)
+##    show_image(line_image)
+#blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
+##    show_image(blocked_image)
+#parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=66)
+#iu.show_image(parking_slot_image)
+##    global final_spot_dict
+##    final_spot_dict = spot_dict
+#
+##    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
+#final_image, list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
+#iu.show_image(final_image)

@@ -64,7 +64,7 @@ def index():
     return render_template('index.html')
 
 def gen(camera):
-    count = 0
+    count = 100
     while True:
         frame = camera.get_frame()
         if count == 100:

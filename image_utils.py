@@ -188,11 +188,10 @@ def int_to_letter(i):
 # %%
 
 
-def draw_parking(image, rects, make_copy=True,
+def draw_parking(image, rects, gap=65, make_copy=True,
                  color=[255, 0, 0], thickness=2, save=False):
     if make_copy:
         new_image = np.copy(image)
-    gap = 65
     spot_dict = {}  # maps each parking ID to its coords
     tot_spots = 0
 
