@@ -56,7 +56,7 @@ def convert_gray_scale(image):
 # %%
 
 
-def detect_edges(image, low_threshold=20, high_threshold=150):
+def detect_edges(image, low_threshold=5, high_threshold=80):
     return cv2.Canny(image, low_threshold, high_threshold)
 
 # %%
@@ -98,7 +98,7 @@ def hough_lines(image):
     Returns hough lines (not the image with lines)
     """
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=10, minLineLength=30, maxLineGap=40)
+                           threshold=10, minLineLength=15, maxLineGap=20)
 
 
 # %%
@@ -107,9 +107,11 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
     if make_copy:
         image = np.copy(image)  # don't want to modify the original
     cleaned = []
+    if lines is None:
+        lines = []
     for line in lines:
         for x1, y1, x2, y2 in line:
-            if abs(y2-y1) <= 5 and abs(x2-x1) >= 50 and abs(x2-x1) <= 1000:
+            if abs(y2-y1) <= 5 and abs(x2-x1) >= 25 and abs(x2-x1) <= 350:
                 cleaned.append((x1, y1, x2, y2))
                 cv2.line(image, (x1, y1), (x2, y2), color, thickness)
     print(" No. lines detected: ", len(cleaned))
@@ -168,7 +170,7 @@ def identify_blocks(image, cleaned, make_copy=True):
     for key in rects:
         tup_topLeft = (int(rects[key][0] - buff), int(rects[key][1]))
         tup_botRight = (int(rects[key][2] + buff), int(rects[key][3]))
-        cv2.rectangle(new_image, tup_topLeft, tup_botRight, (0, 255, 0), 3)
+        cv2.rectangle(new_image, tup_topLeft, tup_botRight, (0, 255, 0), 2)
     return new_image, rects
 
 # %%
@@ -257,6 +259,15 @@ def assign_spots_map(image, spot_dict, make_copy = True, color=[255, 0, 0], thic
         cv2.rectangle(new_image, (int(x1),int(y1)), (int(x2),int(y2)), color, thickness)
     return new_image
 
+
+# %%
+
+
+def get_first_image(path):
+    test_images = [plt.imread(path) for path in glob.glob(path)]
+    return test_images[0]
+
+
 # %%
 
 
@@ -284,10 +295,10 @@ def save_images_for_cnn(image, spot_dict, folder_name='for_cnn/', img_count=0):
         (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
         spot_image = image[y1:y2, x1:x2]
         spot_image = cv2.resize(spot_image, (48, 48))
-        spot_id = str(spot_dict[spot]['lane']) + \
-            str(spot_dict[spot]['row'])
+        spot_id = str(spot_dict[spot]['lane']) + str(spot_dict[spot]['row'])
 
         filename = str(img_count) + '_spot' + spot_id + '.jpg'
         print(folder_name + filename, (x1, x2, y1, y2))
 
         save_img(folder_name + filename, spot_image)
+

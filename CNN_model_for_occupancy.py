@@ -1,14 +1,13 @@
 
 #%%
-import numpy
 import os
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
-from keras.models import Sequential, Model
-from keras.layers import Dropout, Flatten, Dense, GlobalAveragePooling2D
-from keras import backend as k
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
+from keras.models import Model
+from keras.layers import Flatten, Dense
+#from keras import backend as k
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 #%% [markdown]
 # ### 1. Load Test and Train Files
@@ -48,7 +47,8 @@ num_classes = 2
 # ### 3. Build model on top of a trained VGG
 
 #%%
-model = applications.VGG16(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
+model = applications.VGG16(weights = "imagenet", include_top=False, 
+                           input_shape = (img_width, img_height, 3))
 # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
 for layer in model.layers[:10]:
     layer.trainable = False
@@ -134,19 +134,4 @@ plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.show()
-
-
-#%%
-#plt.plot(history_object.history['loss'])
-#plt.plot(history_object.history['val_loss'])
-#plt.title('model loss')
-#plt.ylabel('loss')
-#plt.xlabel('epoch')
-#plt.legend(['train', 'test'], loc='upper left')
-#plt.show()
-
-
-#%%
-
-
 

@@ -6,16 +6,27 @@ import cv2
 import opencv_identifier as opencv
 import time
 import numpy as np
+import requests
 
 app = Flask(__name__)
 
 list_slots = []
 message = ""
 
-def request_update(frame):
+def request_update(frame, lotId):
     global list_slots, message
     try:
         list_slots = opencv.identify_parking_spot(frame)
+#        print(list_slots)
+        if len(list_slots) > 0:
+            list_slots_param = list(map(lambda slot: {
+                    'row':slot['row'],
+                    'lane':slot['lane'],
+                    'status':slot['status']
+                    }, list_slots
+            ))
+            requests.put('http://192.168.43.110:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
+                         json=list_slots_param)
     except:
         message = "Something went wrong!"
 
@@ -63,12 +74,12 @@ def add_text(image):
 def index():
     return render_template('index.html')
 
-def gen(camera):
+def gen(camera, lotId):
     count = 100
     while True:
         frame = camera.get_frame()
         if count == 100:
-            request_update(frame)
+            request_update(frame, lotId)
             count = 0
         time.sleep(0.1)
         frame = add_text(frame)
@@ -80,11 +91,11 @@ def gen(camera):
 
 @app.route('/video_feed/<int:lotId>', methods=['GET'])
 def video_feed(lotId):
-    return Response(gen(VideoCamera()),
+    return Response(gen(VideoCamera(), lotId),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    app.run(port=8081, threaded=False, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=8081, threaded=False, debug=False, use_reloader=False)
     
     
     

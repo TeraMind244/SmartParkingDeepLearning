@@ -1,15 +1,12 @@
 
 # %%
 #from __future__ import division
-import matplotlib.pyplot as plt
 import cv2
-#import os
-import glob
 import numpy as np
-#import time
 # Imports for making predictions
 from keras.models import load_model
 import image_utils as iu
+import read_data as rd
 
 # %% 
 # ### Initial value
@@ -18,12 +15,12 @@ class_dictionary = {}
 class_dictionary[0] = 'empty'
 class_dictionary[1] = 'occupied'
 
-pt_array = [[90, 17],
-            [920, 17],
-            [920, 700],
-            [90, 700]]
+data = rd.get_data()
 
-height_scale = 720
+pt_array = data['pt_array']
+
+height_scale = data['height_scale']
+gap = data['gap']
 
 #cwd = os.getcwd()
 
@@ -57,6 +54,7 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
     spot_list = []
     
     for spot in spot_dict.keys():
+        position = spot_dict[spot]
         all_spots += 1
         (x1, y1, x2, y2) = spot
         (x1, y1, x2, y2) = (int(x1), int(y1), int(x2), int(y2))
@@ -66,8 +64,8 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
 
         label = make_prediction(spot_img)
         
-        slot = {'row': spot_dict[spot]['row'],
-                'lane': spot_dict[spot]['lane'],
+        slot = {'row': position['row'],
+                'lane': position['lane'],
                 'status': label,
                 'position': spot}
         spot_list.append(slot)
@@ -93,11 +91,6 @@ def predict_on_image(image, spot_dict, make_copy=True, color=[0, 255, 0],
 
     return new_image, spot_list
 
-# %%
-
-def get_first_image(path):
-    test_images = [plt.imread(path) for path in glob.glob(path)]
-    return test_images[0]
 
 # %%
 
@@ -126,7 +119,7 @@ def identify_parking_spot(image):
 #    show_image(line_image)
     blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
 #    show_image(blocked_image)
-    parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=66)
+    parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=gap)
 #    iu.show_image(parking_slot_image)
 #    global final_spot_dict
 #    final_spot_dict = spot_dict
@@ -142,33 +135,35 @@ def identify_parking_spot(image):
 
 # %%
     
-#lot_image = get_first_image('test_images/*.jpg')
-##    print(lot_image)
-##    lot_image = image
-#
-##Resize and blur
-##kernel_size = 3
-##image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
-#resized_image = iu.resize(lot_image, height_scale)
-#iu.show_image(resized_image)
-#white_yellow_image = iu.select_rgb_white_yellow(resized_image)
-#gray_image = iu.convert_gray_scale(white_yellow_image)
+lot_image = iu.get_first_image('test_images/*.jpg')
+#    print(lot_image)
+#    lot_image = image
+
+#Resize and blur
+#kernel_size = 3
+#image = cv2.bilateralFilter(image, kernel_size, kernel_size * 2, kernel_size / 2)
+resized_image = iu.resize(lot_image, height_scale)
+iu.show_image(resized_image)
+white_yellow_image = iu.select_rgb_white_yellow(resized_image)
+gray_image = iu.convert_gray_scale(white_yellow_image)
 #iu.show_image(gray_image)
-#edge_image = iu.detect_edges(gray_image)
+edge_image = iu.detect_edges(gray_image)
 #iu.show_image(edge_image)
-#roi_image = iu.select_region(edge_image, pt_array)
-#iu.show_image(roi_image)
-#lines = iu.hough_lines(roi_image)
-#
-#line_image, cleaned = iu.draw_lines(resized_image, lines)
-##    show_image(line_image)
-#blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
-##    show_image(blocked_image)
-#parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=66)
-#iu.show_image(parking_slot_image)
-##    global final_spot_dict
-##    final_spot_dict = spot_dict
-#
-##    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
-#final_image, list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
-#iu.show_image(final_image)
+roi_image = iu.select_region(edge_image, pt_array)
+iu.show_image(roi_image)
+lines = iu.hough_lines(roi_image)
+
+line_image, cleaned = iu.draw_lines(resized_image, lines)
+iu.show_image(line_image)
+blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
+iu.show_image(blocked_image)
+parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=gap)
+iu.show_image(parking_slot_image)
+#    global final_spot_dict
+#    final_spot_dict = spot_dict
+
+#    marked_spot_image = assign_spots_map(lot_image, spot_dict=final_spot_dict)
+final_image, list_slots = predict_on_image(resized_image, spot_dict=spot_dict)
+iu.show_image(final_image)
+
+

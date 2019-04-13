@@ -16,3 +16,5 @@ for_cnn/*
 .pylintrc
 *.avi
 test_frame.jpg
+for_cnn_ignore
+test_ignore/*
