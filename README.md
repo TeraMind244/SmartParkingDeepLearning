@@ -83,11 +83,11 @@ Where `--mode`:
 
 4. `save-frames` - Read `outpy.avi` and save random frames into `webcam_test/`
 
-5. `get-training-data` - Read all images in `webcam_test/` and generrate slot images into `for_cnn/`
+5. `get-training-data` - Read all images in `webcam_test/` and generate slot images into `for_cnn/`
 
 ### Run
 
-1. Prepare training data with `webcam_utils.py`. Your training data should available at `test_images/` with structured above.
+1. Prepare training data with `webcam_utils.py`. Your training data should available at `test_images/` with structured above. However, we have prepared some sample data for you in `test_images/`. Therefore, you may skip this step.
 
 2. Run `CNN_model_for_occupancy.py` to start training model. Make sure you find file `car1.h5` after training process.
 
