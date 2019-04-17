@@ -87,7 +87,7 @@ Where `--mode`:
 
 ### Run
 
-1. Prepare training data with `webcam_utils.py`. Your prepared data will be in 'for_cnn/'. However, please note that training data should be available in `train_data/` with structured above. However, we have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
+1. Prepare training data with `webcam_utils.py`. Your prepared data will be in `for_cnn/`. However, please note that training data should be available in `train_data/` with structured above. However, we have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
 
 2. Run `CNN_model_for_occupancy.py` to start training model. Make sure you find file `car1.h5` after training process.
 
