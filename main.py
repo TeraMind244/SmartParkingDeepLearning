@@ -4,7 +4,7 @@ from flask import Flask, render_template, Response
 from camera import VideoCamera
 import cv2
 import opencv_identifier as opencv
-import time
+#import time
 import numpy as np
 import requests
 
@@ -25,7 +25,7 @@ def request_update(frame, lotId):
                     'status':slot['status']
                     }, list_slots
             ))
-            requests.put('http://192.168.43.110:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
+            requests.put('http://localhost:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
                          json=list_slots_param)
     except:
         message = "Something went wrong!"
@@ -81,7 +81,7 @@ def gen(camera, lotId):
         if count == 100:
             request_update(frame, lotId)
             count = 0
-        time.sleep(0.1)
+#        time.sleep(0.1)
         frame = add_text(frame)
         ret, jpeg = cv2.imencode('.jpg', frame)
         image = jpeg.tobytes()

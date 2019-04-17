@@ -200,8 +200,14 @@ def main():
     if mode == "get-training-data":
         save_images_for_cnn()
         return
+    print("You provided wrong input! Please try again!")
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
 
+# %%
+    
+#capture_video()
+#show_video()
+#write_a_random_frame()

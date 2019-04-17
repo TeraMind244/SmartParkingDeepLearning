@@ -12,13 +12,13 @@ cleaned = {}
 
 
 def show_image(image, cmap=None):
-    plt.figure(figsize=(15, 12))
+    plt.figure(figsize=(16, 9))
     plt.subplot(1, 1, 1)
     # use gray scale color map if there is only one channel
     cmap = 'gray' if len(image.shape) == 2 else cmap
-    plt.imshow(image, cmap=cmap)
     plt.xticks([])
     plt.yticks([])
+    plt.imshow(image, cmap=cmap)
 
 
 # %%
@@ -98,7 +98,7 @@ def hough_lines(image):
     Returns hough lines (not the image with lines)
     """
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=10, minLineLength=15, maxLineGap=20)
+                           threshold=10, minLineLength=30, maxLineGap=30)
 
 
 # %%
@@ -111,7 +111,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
         lines = []
     for line in lines:
         for x1, y1, x2, y2 in line:
-            if abs(y2-y1) <= 5 and abs(x2-x1) >= 25 and abs(x2-x1) <= 350:
+            if abs(y2-y1) <= 5 and abs(x2-x1) >= 35 and abs(x2-x1) <= 200:
                 cleaned.append((x1, y1, x2, y2))
                 cv2.line(image, (x1, y1), (x2, y2), color, thickness)
     print(" No. lines detected: ", len(cleaned))
@@ -135,11 +135,11 @@ def identify_blocks(image, cleaned, make_copy=True):
     # Step 3: Find clusters of x1 close together - clust_dist apart
     clusters = {}
     dIndex = 0
-    clus_dist = 55
+    clust_dist = 55
 
     for i in range(len(sorted_lines) - 1):
         distance = abs(sorted_lines[i+1][0] - sorted_lines[i][0])
-        if distance <= clus_dist:
+        if distance <= clust_dist:
             if not dIndex in clusters.keys():
                 clusters[dIndex] = []
             clusters[dIndex].append(sorted_lines[i])
@@ -152,16 +152,16 @@ def identify_blocks(image, cleaned, make_copy=True):
     i = 0
     for key in clusters:
         all_list = clusters[key]
-        cleaned = list(set(all_list))
-        if len(cleaned) > 5:
-            cleaned = sorted(cleaned, key=lambda tup: tup[1])
-            avg_y1 = cleaned[0][1]
-            avg_y2 = cleaned[-1][1]
-            cleaned = sorted(cleaned, key=lambda tup: tup[0])
-            max_x1 = cleaned[0][0]
-            cleaned = sorted(cleaned, key=lambda tup: tup[2])
-            min_x2 = cleaned[-1][2]
-            rects[i] = (max_x1, avg_y1, min_x2, avg_y2)
+        lines_in_clust = list(set(all_list))
+        if len(lines_in_clust) > 5:
+            lines_in_clust = sorted(lines_in_clust, key=lambda tup: tup[1])
+            min_y1 = lines_in_clust[0][1]
+            max_y2 = lines_in_clust[-1][1]
+            lines_in_clust = sorted(lines_in_clust, key=lambda tup: tup[0])
+            max_x1 = lines_in_clust[0][0]
+            lines_in_clust = sorted(lines_in_clust, key=lambda tup: tup[2])
+            min_x2 = lines_in_clust[-1][2]
+            rects[i] = (max_x1, min_y1, min_x2, max_y2)
             i += 1
 
     print("Num Parking Lanes: ", len(rects)*2-2)
@@ -301,4 +301,113 @@ def save_images_for_cnn(image, spot_dict, folder_name='for_cnn/', img_count=0):
         print(folder_name + filename, (x1, x2, y1, y2))
 
         save_img(folder_name + filename, spot_image)
+        
+# %%
+
+def order_points(pts):
+	# initialzie a list of coordinates that will be ordered
+	# such that the first entry in the list is the top-left,
+	# the second entry is the top-right, the third is the
+	# bottom-right, and the fourth is the bottom-left
+    rect = np.zeros((4, 2), dtype = "float32")
+    pts = np.array(pts, dtype = "float32")
+	# the top-left point will have the smallest sum, whereas
+	# the bottom-right point will have the largest sum
+    s = pts.sum(axis = 1)
+    rect[0] = pts[np.argmin(s)]
+    rect[2] = pts[np.argmax(s)]
+ 
+	# now, compute the difference between the points, the
+	# top-right point will have the smallest difference,
+	# whereas the bottom-left will have the largest difference
+    diff = np.diff(pts, axis = 1)
+    rect[1] = pts[np.argmin(diff)]
+    rect[3] = pts[np.argmax(diff)]
+ 
+	# return the ordered coordinates
+    return rect        
+
+
+# %% 
+        
+        
+def four_point_transform(image, pts):
+	# obtain a consistent order of the points and unpack them
+	# individually
+    rect = order_points(pts)
+    (tl, tr, br, bl) = rect
+ 
+	# compute the width of the new image, which will be the
+	# maximum distance between bottom-right and bottom-left
+	# x-coordiates or the top-right and top-left x-coordinates
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    maxWidth = max(int(widthA), int(widthB))
+ 
+	# compute the height of the new image, which will be the
+	# maximum distance between the top-right and bottom-right
+	# y-coordinates or the top-left and bottom-left y-coordinates
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    maxHeight = max(int(heightA), int(heightB))
+ 
+	# now that we have the dimensions of the new image, construct
+	# the set of destination points to obtain a "birds eye view",
+	# (i.e. top-down view) of the image, again specifying points
+	# in the top-left, top-right, bottom-right, and bottom-left
+	# order
+    dst = np.array([
+    		[0, 0],
+    		[maxWidth - 1, 0],
+    		[maxWidth - 1, maxHeight - 1],
+    		[0, maxHeight - 1]
+        ], dtype = "float32")
+ 
+	# compute the perspective transform matrix and then apply it
+    M = cv2.getPerspectiveTransform(rect, dst)
+    warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
+ 
+	# return the warped image
+    return warped
+
+
+# %%
+    
+
+def rotate(image, angle):
+    
+    (h, w) = image.shape[:2]
+    
+    center = (w / 2, h / 2)
+    scale = 1.0
+    M = cv2.getRotationMatrix2D(center, -angle, scale)
+    rotated = cv2.warpAffine(image, M, (h, w))
+    return rotated
+
+# %%
+
+
+def rotate_bound(image, angle):
+    # grab the dimensions of the image and then determine the
+    # center
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w // 2, h // 2)
+ 
+    # grab the rotation matrix (applying the negative of the
+    # angle to rotate clockwise), then grab the sine and cosine
+    # (i.e., the rotation components of the matrix)
+    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+ 
+    # compute the new bounding dimensions of the image
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+ 
+    # adjust the rotation matrix to take into account translation
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+ 
+    # perform the actual rotation and return the image
+    return cv2.warpAffine(image, M, (nW, nH))
 
