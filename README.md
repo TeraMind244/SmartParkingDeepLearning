@@ -2,9 +2,9 @@
 
 ### Contents:
 
-1. `test_images/` - Sample image to run and test the code on
+1. `webcam_test/` - Sample image to run and test the code on
 
-2. `train_data/` - Training data for CNN model
+2. `train_data/` - Training data for CNN model. Sample data included
 
 3. `for_cnn/` - Directory to keep generated images for cnn. You have to manually label these images by separating them into sub-folders in side `train_data/` as structured below. Please note that `for_cnn/` is just only a directory to keep temporary images. It has no use in main process.
 
@@ -22,7 +22,9 @@
 
 For the best training result, you should separate them under ratio `8:2` for `train:test`
 
-4. `camera.py` - Python class for getting frames from your webcam
+4. `templates` - Sample template to test API provided by Flask
+
+5. `camera.py` - Python class for getting frames from your webcam
 
 Change
 ```
@@ -31,22 +33,24 @@ self.video = cv2.VideoCapture(1)
 to
 ```
 self.video = cv2.VideoCapture(0)
+or
+self.video = cv2.VideoCapture('your_video.avi')
 ```
 if you don't have external webcam
 
-5. `CNN_model_for_occupancy.py` - Python script for starting your model training process. Here we're using pre-trained VGG16 model from Google. Therefore, in the first time you run the script, it may take long time for downloading the model.
+6. `CNN_model_for_occupancy.py` - Python script for starting your model training process. Here we're using pre-trained VGG16 model from Google. Therefore, in the first time you run the script, it may take a long time for downloading the model.
 
-6. `opencv_identifier.py` - Python script for parking spot detection
+7. `opencv_identifier.py` - Python script for parking spot detection
 
-7. `main.py` - Python script using Flask to provide API
+8. `main.py` - Python script using Flask to provide API
 
-8. `config.json` - Config file for dynamic data
+9. `config.json` - Config file for dynamic data
 
-9. `read_data.py` - Python script to read data from `config.json`. This file is imported in other files. You do not need to run this file.
+10. `read_data.py` - Python script to read data from `config.json`. This file is imported in other Python files. You do not need to run this file.
 
-10. `webcam_utils.py` - Python utils script that help you capturing video from webcam, save image for cnn model, etc. User's manual can be found below.
+11. `webcam_utils.py` - Python utils script that help you capturing video from webcam and save image for cnn model, etc. User's manual can be found below.
 
-11. `webcam_test/` - Directory to save images from running `webcam_utils.py`
+12. `image_utils` - Python utils script that implement `Opencv` framework's algorithm.
 
 ### Installation
 
@@ -87,7 +91,7 @@ Where `--mode`:
 
 ### Run
 
-1. Prepare training data with `webcam_utils.py`. Your prepared data will be in `for_cnn/`. However, please note that training data should be available in `train_data/` with structured above. However, we have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
+1. Prepare training data with `webcam_utils.py`. Your prepared data will be in `for_cnn/`. However, please note that training data should be available in `train_data/` with structured above. We have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
 
 2. Run `CNN_model_for_occupancy.py` to start training model. Make sure you find file `car1.h5` after training process.
 
