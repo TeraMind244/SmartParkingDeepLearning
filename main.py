@@ -1,6 +1,6 @@
 # main.py
 
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, abort
 from camera import VideoCamera
 import cv2
 import opencv_identifier as opencv
@@ -64,7 +64,7 @@ def gen(camera, lotId):
 @app.route('/video_feed/<int:lotId>', methods=['GET'])
 def video_feed(lotId):
     if lotId != current_lotId:
-        return Response()
+        return abort(404)
     return Response(gen(VideoCamera(), lotId),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
