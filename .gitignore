@@ -10,8 +10,6 @@ pic
 identify_parking_spots.py
 testFlask.py
 test_image.py
-webcamDetection.py
-api.py
 for_cnn/*
 .pylintrc
 *.avi
