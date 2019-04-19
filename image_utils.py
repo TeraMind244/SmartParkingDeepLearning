@@ -6,7 +6,7 @@ import cv2
 import glob
 import numpy as np
 
-cleaned = {}
+#cleaned = {}
 
 # %%
 
@@ -368,46 +368,89 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
  
 	# return the warped image
-    return warped
+    return warped, M
 
 
 # %%
     
 
-def rotate(image, angle):
-    
-    (h, w) = image.shape[:2]
-    
-    center = (w / 2, h / 2)
-    scale = 1.0
-    M = cv2.getRotationMatrix2D(center, -angle, scale)
-    rotated = cv2.warpAffine(image, M, (h, w))
-    return rotated
+def blur(image, kernel_size=3):
+    return cv2.bilateralFilter(image, 
+                               d=kernel_size, 
+                               sigmaColor=kernel_size * 2, 
+                               sigmaSpace=kernel_size / 2)
 
 # %%
+    
+def get_rect_vertices(tuple_x, tuple_y):
+    x1 = min(tuple_x)
+    x2 = max(tuple_x)
+    y1 = min(tuple_y)
+    y2 = max(tuple_y)
+    
+    tr = [x1, y2]
+    tl = [x1, y1]
+    br = [x2, y2]
+    bl = [x2, y1]
+    
+    pts = [tr, tl, br, bl]
+    
+    return order_points(pts)
+    
 
+# %%
+    
 
-def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
-    (h, w) = image.shape[:2]
-    (cX, cY) = (w // 2, h // 2)
- 
-    # grab the rotation matrix (applying the negative of the
-    # angle to rotate clockwise), then grab the sine and cosine
-    # (i.e., the rotation components of the matrix)
-    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-    cos = np.abs(M[0, 0])
-    sin = np.abs(M[0, 1])
- 
-    # compute the new bounding dimensions of the image
-    nW = int((h * sin) + (w * cos))
-    nH = int((h * cos) + (w * sin))
- 
-    # adjust the rotation matrix to take into account translation
-    M[0, 2] += (nW / 2) - cX
-    M[1, 2] += (nH / 2) - cY
- 
-    # perform the actual rotation and return the image
-    return cv2.warpAffine(image, M, (nW, nH))
+def reverse_matrix(matrix):
+    return np.array(np.matrix(matrix).getI())
+    
 
+# %% 
+    
+
+def reverse_rect_to_polygon(pts, reversed_matrix):
+    return cv2.perspectiveTransform(np.array([pts], dtype=np.float32), 
+                                    reversed_matrix)
+
+# %%
+    
+
+def reverse_image(image, transform_matrix, spot_list, 
+                  color=[0, 255, 0], alpha=0.5):
+    
+    overlay = np.copy(image)
+    
+    all_spots = 0
+    cnt_empty = 0
+    
+    reversed_matrix = reverse_matrix(transform_matrix)
+
+    for spot in spot_list:
+        status = spot['status']
+        all_spots += 1
+        if status == 'empty':
+#            print(spot['position'])
+            (x1, y1, x2, y2) = spot['position']
+            rect_points = get_rect_vertices((x1, x2), (y1, y2))
+            
+            polygon_points = reverse_rect_to_polygon(rect_points, 
+                                                     reversed_matrix)
+            
+            cv2.fillConvexPoly(overlay, np.array(polygon_points[0], 
+                                                 dtype=np.int32), color)
+            
+            cnt_empty += 1
+    
+    cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0, image)
+
+    cv2.putText(image, "Available: %d spots" %cnt_empty, (30, 35),
+    cv2.FONT_HERSHEY_SIMPLEX,
+    0.7, (255, 255, 255), 2)
+
+    cv2.putText(image, "Total: %d spots" %all_spots, (30, 65),
+    cv2.FONT_HERSHEY_SIMPLEX,
+    0.7, (255, 255, 255), 2)
+    
+    return image
+    
+    

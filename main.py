@@ -4,71 +4,43 @@ from flask import Flask, render_template, Response
 from camera import VideoCamera
 import cv2
 import opencv_identifier as opencv
-#import time
-import numpy as np
-import requests
+import image_utils as iu
+import read_data as rd
+#import numpy as np
+#import requests
 
 app = Flask(__name__)
 
 list_slots = []
+transform_matrix = []
 message = ""
 
+data = rd.get_data()
+
+current_lotId = data['lotId']
+
 def request_update(frame, lotId):
-    global list_slots, message
+    global list_slots, message, transform_matrix
     try:
-        list_slots = opencv.identify_parking_spot(frame)
+        transform_matrix, list_slots = opencv.detect_parking_image(frame)
 #        print(list_slots)
-        if len(list_slots) > 0:
-            list_slots_param = list(map(lambda slot: {
-                    'row':slot['row'],
-                    'lane':slot['lane'],
-                    'status':slot['status']
-                    }, list_slots
-            ))
-            requests.put('http://localhost:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
-                         json=list_slots_param)
+#        if len(list_slots) > 0:
+#            list_slots_param = list(map(lambda slot: {
+#                    'row':slot['row'],
+#                    'lane':slot['lane'],
+#                    'status':slot['status']
+#                    }, list_slots
+#            ))
+#            requests.put('http://localhost:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
+#                         json=list_slots_param)
     except:
         message = "Something went wrong!"
 
 def add_text(image):
-
-    new_image = np.copy(image)
-    overlay = np.copy(image)
-    color=[0, 255, 0]
-    alpha=0.5
-    all_spots = 0
-    cnt_empty = 0
-    
-    height, width, depth = image.shape
-    
-    scale = 720/height
-    
-    global list_slots
-    
-    for slot in list_slots:
-        all_spots += 1
-        (x1, y1, x2, y2) = slot['position']
-        (x1, y1, x2, y2) = (int(x1)/scale, int(y1)/scale,
-                             int(x2)/scale, int(y2)/scale)
-        
-        label = slot['status']
-
-        if label == 'empty':
-            cv2.rectangle(overlay, (int(x1),int(y1)), (int(x2),int(y2)),
-                          color, -1)
-            cnt_empty += 1
-
-    cv2.addWeighted(overlay, alpha, new_image, 1 - alpha, 0, new_image)
-
-    cv2.putText(new_image, "Available: %d spots" %cnt_empty, (30, 35),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    0.7, (255, 255, 255), 2)
-
-    cv2.putText(new_image, "Total: %d spots" %all_spots, (30, 65),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    0.7, (255, 255, 255), 2)
-    
-    return new_image
+    if len(transform_matrix) == 0:
+        return image
+    else:
+        return iu.reverse_image(image, transform_matrix, list_slots)
 
 @app.route('/')
 def index():
@@ -91,13 +63,12 @@ def gen(camera, lotId):
 
 @app.route('/video_feed/<int:lotId>', methods=['GET'])
 def video_feed(lotId):
+    if lotId != current_lotId:
+        return Response()
     return Response(gen(VideoCamera(), lotId),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8081, threaded=False, debug=False, use_reloader=False)
-    
-    
-    
     
     

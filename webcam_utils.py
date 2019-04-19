@@ -106,13 +106,12 @@ def show_video():
 
 def write_a_random_frame():
     cap = cv2.VideoCapture('outpy.avi')
-#    import time
     count = 0
     while(cap.isOpened()):
         ret, frame = cap.read()
         if ret == True:
             count += 1
-            if count == 50:
+            if count == 20:
                 filename = "webcam_test/test_frame.jpg"
                 cv2.imwrite(filename, frame)
         # Break the loop
@@ -137,7 +136,7 @@ def write_random_frames():
         if ret == True:
             if count % 10 == 0:
                 filename = "webcam_test/test_frame_%d.jpg" %count
-                print(filename)
+#                print(filename)
                 cv2.imwrite(filename, frame)
             count += 1
         # Break the loop
@@ -208,6 +207,6 @@ def main():
 
 # %%
     
-#capture_video()
+capture_video()
 #show_video()
-#write_a_random_frame()
+write_a_random_frame()
