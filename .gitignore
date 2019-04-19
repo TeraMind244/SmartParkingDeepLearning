@@ -7,10 +7,5 @@ pic
 identify_parking_spots.py
 testFlask.py
 test_image.py
-for_cnn/*.jpg
 .pylintrc
 *.avi
-test_frame.jpg
-for_cnn_ignore
-test_ignore
-webcam_test/*.jpg
