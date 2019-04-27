@@ -24,15 +24,16 @@ cam_list = data['cam_list']
 for cam in cam_list:
     cam['transform_matrix'] = []
     cam['list_slots'] = []
+    cam['scale'] = 1.0
 
 # %%
 
 
-def add_text(image, transform_matrix, list_slots):
+def add_text(image, transform_matrix, list_slots, scale):
     if len(transform_matrix) == 0:
         return image
     else:
-        return iu.reverse_image(image, transform_matrix, list_slots)
+        return iu.reverse_image(image, transform_matrix, list_slots, scale)
     
     
 #TODO merge result of list slots from camera
@@ -40,10 +41,12 @@ def add_text(image, transform_matrix, list_slots):
 def request_update(frame, lotId, camId):
     global message
     try:
-        transform_matrix, list_slots = opencv.detect_parking_image(frame, camId)
+        print('Updating camera' + str(camId))
+        transform_matrix, list_slots, scale = opencv.detect_parking_image(frame, camId)
         cam = next(filter(lambda cam: cam['cam_id'] == camId, cam_list))
         cam['transform_matrix'] = transform_matrix
         cam['list_slots'] = list_slots
+        cam['scale'] = scale
 #        print(list_slots)
 #        if len(list_slots) > 0:
 #            list_slots_param = list(map(lambda slot: {
@@ -63,21 +66,28 @@ def gen(camera, lotId):
     while True:
         result = []
         for cam in cam_list:
-            frame = camera.get_frame(cam['cam_id'])
+            camId = cam['cam_id']
+            frame = camera.get_frame(camId)
             
             if count == 200:
-#                request_update(frame, lotId)
-                count = 0
+                request_update(frame, lotId, camId)
             
             height, width, depth = frame.shape
             gap = np.full((50, width, depth), 255)
-#            frame = add_text(frame, cam['transform_matrix'], cam['list_slots'])
+            
+            frame = add_text(frame, 
+                             cam['transform_matrix'], 
+                             cam['list_slots'], 
+                             cam['scale'])
+            
             if len(result) == 0:
                 result = frame
             else:
                 result = np.concatenate((result, gap, frame), axis=0)
 
         ret, jpeg = cv2.imencode('.jpg', result)
+        if count == 200:
+            count = 0
         count += 1
         yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')

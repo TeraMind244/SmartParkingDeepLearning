@@ -205,38 +205,38 @@ def write_random_frames():
 
 # %%
     
-#capture_video(1)
+capture_video(1)
 #show_video()
-#write_a_random_frame()
+write_a_random_frame()
 #write_random_frames()
 #save_images_for_cnn()
     
 # %%%
     
-cap1 = cv2.VideoCapture(1)
-cap2 = cv2.VideoCapture(2)
-
-while(True):
-    ret, frame1 = cap1.read()
-    ret, frame2 = cap2.read()
-
-    if ret == True:
-
-        # Display the resulting frame
-        cv2.imshow('frame1', frame1)
-        cv2.imshow('frame2', frame2)
-
-        # Press Q on keyboard to stop recording
-        keypress = cv2.waitKey(1) & 0xFF
-        if keypress == ord('q'):
-            break
-                
-    # Break the loop
-    else:
-        break
-
-cap1.release()
-cap2.release()
-
-# Closes all the frames
-cv2.destroyAllWindows()
+#cap1 = cv2.VideoCapture(1)
+#cap2 = cv2.VideoCapture(2)
+#
+#while(True):
+#    ret, frame1 = cap1.read()
+#    ret, frame2 = cap2.read()
+#
+#    if ret == True:
+#
+#        # Display the resulting frame
+#        cv2.imshow('frame1', frame1)
+#        cv2.imshow('frame2', frame2)
+#
+#        # Press Q on keyboard to stop recording
+#        keypress = cv2.waitKey(1) & 0xFF
+#        if keypress == ord('q'):
+#            break
+#                
+#    # Break the loop
+#    else:
+#        break
+#
+#cap1.release()
+#cap2.release()
+#
+## Closes all the frames
+#cv2.destroyAllWindows()

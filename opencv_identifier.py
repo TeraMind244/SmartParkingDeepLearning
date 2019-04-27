@@ -92,7 +92,11 @@ def detect_parking_image(image, camId, debug=False):
     if debug:
         iu.show_image(rotated_image)
     
-    blurred_image = iu.blur(rotated_image, kernel_size=kernel_size)
+    resized_image, scale = iu.resize(rotated_image, 360)
+    if debug:
+        iu.show_image(resized_image)
+    
+    blurred_image = iu.blur(resized_image, kernel_size=kernel_size)
     if debug:
         iu.show_image(blurred_image)
     
@@ -102,20 +106,24 @@ def detect_parking_image(image, camId, debug=False):
     
     lines = iu.hough_lines(edge_image)
     
-    line_image, cleaned = iu.draw_lines(rotated_image, lines)
+    line_image, cleaned = iu.draw_lines(resized_image, lines)
     if debug:
         iu.show_image(line_image)
     
-    blocked_image, rects = iu.identify_blocks(rotated_image, cleaned)
+    blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
     if debug:
         iu.show_image(blocked_image)
         
-    parking_slot_image, spot_dict = iu.draw_parking(rotated_image, rects, gap=gap, lane_list=lane_list)
+    parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=gap, lane_list=lane_list)
     if debug:
         iu.show_image(parking_slot_image)
     
     spot_list = predict_on_image(parking_slot_image, spot_dict)
     
-    return transform_matrix, spot_list
+    if debug:
+        final_image = iu.reverse_image(test_image, transform_matrix, spot_list, scale)
+        iu.show_image(final_image)
+    
+    return transform_matrix, spot_list, scale
 
-#transform_matrix, spot_list = detect_parking_image(None, 2, debug=True)
+#transform_matrix, spot_list, scale = detect_parking_image(None, 1, debug=True)

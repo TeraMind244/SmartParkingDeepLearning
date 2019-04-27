@@ -28,7 +28,7 @@ def resize(image, v_height):
     height, width, depth = image.shape
     scale = v_height / height
     (newX, newY) = (width*scale, height*scale)
-    return cv2.resize(image, (int(newX), int(newY)))
+    return cv2.resize(image, (int(newX), int(newY))), scale
 
 # %%
 
@@ -415,10 +415,16 @@ def reverse_rect_to_polygon(pts, reversed_matrix):
     return cv2.perspectiveTransform(np.array([pts], dtype=np.float32), 
                                     reversed_matrix)
 
+
+# %%
+    
+def reverse_scale(pts_tuple, scale):
+    return tuple((np.array(pts_tuple) / scale).astype(dtype=int))
+
 # %%
     
 
-def reverse_image(image, transform_matrix, spot_list, 
+def reverse_image(image, transform_matrix, spot_list, scale=1.0,
                   color=[0, 255, 0], alpha=0.5):
     
     overlay = np.copy(image)
@@ -433,7 +439,7 @@ def reverse_image(image, transform_matrix, spot_list,
         all_spots += 1
         if status == 'empty':
 #            print(spot['position'])
-            (x1, y1, x2, y2) = spot['position']
+            (x1, y1, x2, y2) = reverse_scale(spot['position'], scale)
             rect_points = get_rect_vertices((x1, x2), (y1, y2))
             
             polygon_points = reverse_rect_to_polygon(rect_points, 
