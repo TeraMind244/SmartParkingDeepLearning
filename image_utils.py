@@ -75,14 +75,14 @@ def filter_region(image, vertices):
     return cv2.bitwise_and(image, mask)
 
 
-def select_region(image, pt_array):
+def select_region(image, roi_array):
     """
     It keeps the region surrounded by the `vertices` (i.e. polygon).  Other area is set to 0 (black).
     """
     # rows, cols = image.shape[:2]
 
     # the vertices are an array of polygons (i.e array of arrays) and the data type must be integer
-    vertices = np.array([pt_array], dtype=np.int32)
+    vertices = np.array([roi_array], dtype=np.int32)
     return filter_region(image, vertices)
 
 # %% [markdown]
@@ -98,7 +98,7 @@ def hough_lines(image):
     Returns hough lines (not the image with lines)
     """
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=10, minLineLength=30, maxLineGap=30)
+                           threshold=15, minLineLength=40, maxLineGap=10)
 
 
 # %%
@@ -114,7 +114,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2, make_copy=True):
             if abs(y2-y1) <= 5 and abs(x2-x1) >= 35 and abs(x2-x1) <= 200:
                 cleaned.append((x1, y1, x2, y2))
                 cv2.line(image, (x1, y1), (x2, y2), color, thickness)
-    print(" No. lines detected: ", len(cleaned))
+#    print(" No. lines detected: ", len(cleaned))
     return image, cleaned
 
 
@@ -190,7 +190,7 @@ def int_to_letter(i):
 # %%
 
 
-def draw_parking(image, rects, gap=65, make_copy=True,
+def draw_parking(image, rects, lane_list, gap=65, make_copy=True,
                  color=[255, 0, 0], thickness=2, save=False):
     if make_copy:
         new_image = np.copy(image)
@@ -200,9 +200,8 @@ def draw_parking(image, rects, gap=65, make_copy=True,
     lane_num = 0
 
     for key in rects:
-        lane_num += 1
-        lane1 = int_to_letter(lane_num)
-        lane2 = int_to_letter(lane_num + 1)
+#        lane1 = int_to_letter(lane_num)
+#        lane2 = int_to_letter(lane_num + 1)
         # Horizontal lines
         tup = rects[key]
         x1 = int(tup[0])
@@ -229,20 +228,24 @@ def draw_parking(image, rects, gap=65, make_copy=True,
 
         # Dictionary of spot positions
         if key == 0 or key == (len(rects) - 1):
+            lane_num += 1
+            lane = lane_list[lane_num - 1]
             for i in range(0, num_splits):
                 y = int(y1 + i*gap)
-                spot_dict[(x1, y, x2, y+gap)] = {'row': i + 1,
-                                                 'lane': lane1}
+                spot_dict[(x1, y, x2, y+gap)] = {'row': i + lane['start_row'],
+                                                 'lane': lane['lane']}
         else:
+            lane_num += 2
+            lane1 = lane_list[lane_num - 1]
+            lane2 = lane_list[lane_num]
             for i in range(0, num_splits):
                 y = int(y1 + i*gap)
                 x = int((x1 + x2)/2)
-                spot_dict[(x1, y, x, y+gap)] = {'row': i + 1,
-                                                'lane': lane1}
-                spot_dict[(x, y, x2, y+gap)] = {'row': i + 1,
-                                                'lane': lane2}
-            lane_num += 1
-
+                spot_dict[(x1, y, x, y+gap)] = {'row': i + lane1['start_row'],
+                                                'lane': lane1['lane']}
+                spot_dict[(x, y, x2, y+gap)] = {'row': i + lane2['start_row'],
+                                                'lane': lane2['lane']}
+            
     print("total parking spaces: ", tot_spots)
     if save:
         filename = 'with_parking.jpg'

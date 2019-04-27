@@ -17,12 +17,6 @@ class_dictionary[1] = 'occupied'
 
 data = rd.get_data()
 
-pt_array = data['pt_array']
-height_scale = data['height_scale']
-gap = data['gap']
-kernel_size=data['kernel_size']
-roi_array = data['roi_array']
-
 model = load_model('car1.h5')
 
 # %%
@@ -75,8 +69,16 @@ def predict_on_image(image, spot_dict, color=[0, 255, 0],
 # %%
     
 
-def detect_parking_image(image, debug=False):
+def detect_parking_image(image, camId, debug=False):
     test_image = image
+    
+#    TODO get initial value for lotId
+    cam_data = next(filter(lambda cam: cam['cam_id'] == camId, data['cam_list']))
+    roi_array = cam_data['roi_array']
+    pt_array = cam_data['pt_array']
+    kernel_size = cam_data['kernel_size']
+    gap = cam_data['gap']
+    lane_list = cam_data['lane_list']
     
     if debug:
         test_image = iu.get_first_image('webcam_test/test_frame.jpg')
@@ -108,7 +110,7 @@ def detect_parking_image(image, debug=False):
     if debug:
         iu.show_image(blocked_image)
         
-    parking_slot_image, spot_dict = iu.draw_parking(rotated_image, rects, gap=gap)
+    parking_slot_image, spot_dict = iu.draw_parking(rotated_image, rects, gap=gap, lane_list=lane_list)
     if debug:
         iu.show_image(parking_slot_image)
     
@@ -116,3 +118,4 @@ def detect_parking_image(image, debug=False):
     
     return transform_matrix, spot_list
 
+#transform_matrix, spot_list = detect_parking_image(None, 2, debug=True)
