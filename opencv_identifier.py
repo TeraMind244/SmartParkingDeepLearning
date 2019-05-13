@@ -72,8 +72,10 @@ def predict_on_image(image, spot_dict, color=[0, 255, 0],
 def detect_parking_image(image, camId, debug=False):
     test_image = image
     
-#    TODO get initial value for lotId
-    cam_data = next(filter(lambda cam: cam['cam_id'] == camId, data['cam_list']))
+    cam_data = next(filter(lambda cam: cam['cam_id'] == camId, data['cam_list']), {})
+    if not cam_data:
+        return [], [], 1.0
+    
     roi_array = cam_data['roi_array']
     pt_array = cam_data['pt_array']
     kernel_size = cam_data['kernel_size']
@@ -126,4 +128,4 @@ def detect_parking_image(image, camId, debug=False):
     
     return transform_matrix, spot_list, scale
 
-#transform_matrix, spot_list, scale = detect_parking_image(None, 1, debug=True)
+#transform_matrix, spot_list, scale = detect_parking_image(None, 2, debug=True)

@@ -1,6 +1,6 @@
 #import numpy as np
 import cv2
-#import image_utils as iu
+import image_utils as iu
 import sys
 import read_data as rd
 #import opencv_identifier as opencv
@@ -148,29 +148,41 @@ def write_random_frames():
 # %%
 
 
-#def save_images_for_cnn():
-#    images = iu.get_all_image('webcam_test/*.jpg')
-#
-#    img_count = 0
-#    for image in images:
-#        resized_image = iu.resize(image, height_scale)
-#    
-#        white_yellow_image = iu.select_rgb_white_yellow(resized_image)
-#        gray_image = iu.convert_gray_scale(white_yellow_image)
-#        
-#        edge_image = iu.detect_edges(gray_image)
-#        roi_image = iu.select_region(edge_image, pt_array)
-#        
-#        lines = iu.hough_lines(roi_image)
-#        line_image, cleaned = iu.draw_lines(resized_image, lines)
-#        
-#        blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
-#        
-#        parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=66)
-#        
-#        iu.save_images_for_cnn(resized_image, spot_dict, folder_name='for_cnn/', img_count=img_count)
-#        
-#        img_count += 1
+def save_images_for_cnn(camId):
+    images = iu.get_all_image('webcam_test/*.jpg')
+
+    img_count = 0
+    for image in images:
+        test_image = image
+    
+        cam_data = next(filter(lambda cam: cam['cam_id'] == camId, data['cam_list']))
+        roi_array = cam_data['roi_array']
+        pt_array = cam_data['pt_array']
+        kernel_size = cam_data['kernel_size']
+        gap = cam_data['gap']
+        lane_list = cam_data['lane_list']
+        
+        roi_image = iu.select_region(test_image, roi_array)
+        
+        rotated_image, transform_matrix = iu.four_point_transform(roi_image, pt_array)
+        
+        resized_image, scale = iu.resize(rotated_image, 360)
+        
+        blurred_image = iu.blur(resized_image, kernel_size=kernel_size)
+        
+        edge_image = iu.detect_edges(blurred_image)
+        
+        lines = iu.hough_lines(edge_image)
+        
+        line_image, cleaned = iu.draw_lines(resized_image, lines)
+        
+        blocked_image, rects = iu.identify_blocks(resized_image, cleaned)
+            
+        parking_slot_image, spot_dict = iu.draw_parking(resized_image, rects, gap=gap, lane_list=lane_list)
+        
+        iu.save_images_for_cnn(resized_image, spot_dict, folder_name='for_cnn/', img_count=img_count)
+        
+        img_count += 1
 
 
 # %%
@@ -203,13 +215,6 @@ def write_random_frames():
 #if __name__ == "__main__":
 #    main()
 
-# %%
-    
-capture_video(1)
-#show_video()
-write_a_random_frame()
-#write_random_frames()
-#save_images_for_cnn()
     
 # %%%
     
@@ -240,3 +245,13 @@ write_a_random_frame()
 #
 ## Closes all the frames
 #cv2.destroyAllWindows()
+        
+
+# %%
+    
+capture_video(2)
+#show_video()
+write_a_random_frame()
+#write_random_frames()
+#save_images_for_cnn(2)
+

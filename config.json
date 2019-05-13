@@ -1,40 +1,39 @@
 {
+    "api_domain": "http://128.199.108.232:8080/",
     "lotId": 1,
     "cam_list": [
         {
             "cam_id": 1,
             "pt_array": [
-                            [31, 56],
-                            [585, 40],
-                            [600, 274],
-                            [31, 280]
+                            [98, 102],
+                            [595, 51],
+                            [627, 201],
+                            [109, 265]
                         ],
-            "gap": 70.5,
-            "kernel_size": 9,
+            "gap": 87,
+            "kernel_size": 21,
             "roi_array": [
-                            [31, 56],
-                            [585, 40],
-                            [600, 274],
-                            [31, 280]
+                            [98, 102],
+                            [595, 51],
+                            [627, 201],
+                            [109, 265]
                         ],
             "lane_list": [
                 {
                     "lane": "A",
-                    "start_row": 1
+                    "start_row": 7
                 },
                 {
                     "lane": "B",
-                    "start_row": 1
-                }
-                ,
+                    "start_row": 7
+                },
                 {
                     "lane": "C",
-                    "start_row": 1
-                }
-                ,
+                    "start_row": 7
+                },
                 {
                     "lane": "D",
-                    "start_row": 1
+                    "start_row": 7
                 }
             ]
         }
@@ -42,37 +41,35 @@
         {
             "cam_id": 2,
             "pt_array": [
-                            [208, 210],
-                            [537, 243],
-                            [522, 388],
-                            [198, 340]
+                            [4, 131],
+                            [562, 119],
+                            [581, 395],
+                            [5, 413]
                         ],
-            "gap": 70,
-            "kernel_size": 9,
+            "gap": 58.5,
+            "kernel_size": 21,
             "roi_array": [
-                            [208, 210],
-                            [537, 243],
-                            [522, 388],
-                            [198, 340]
+                            [4, 131],
+                            [562, 119],
+                            [581, 395],
+                            [5, 413]
                         ],
             "lane_list": [
                 {
                     "lane": "A",
-                    "start_row": 6
+                    "start_row": 1
                 },
                 {
                     "lane": "B",
-                    "start_row": 6
-                }
-                ,
+                    "start_row": 1
+                },
                 {
                     "lane": "C",
-                    "start_row": 6
-                }
-                ,
+                    "start_row": 1
+                },
                 {
                     "lane": "D",
-                    "start_row": 6
+                    "start_row": 1
                 }
             ]
         }

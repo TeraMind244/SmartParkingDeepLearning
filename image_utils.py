@@ -56,7 +56,7 @@ def convert_gray_scale(image):
 # %%
 
 
-def detect_edges(image, low_threshold=5, high_threshold=80):
+def detect_edges(image, low_threshold=10, high_threshold=50):
     return cv2.Canny(image, low_threshold, high_threshold)
 
 # %%
@@ -91,14 +91,15 @@ def select_region(image, roi_array):
 # %%
 
 
-def hough_lines(image):
+def hough_lines(image, minLineLength=50, maxLineGap=20):
     """
     `image` should be the output of a Canny transform.
 
     Returns hough lines (not the image with lines)
     """
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
-                           threshold=15, minLineLength=40, maxLineGap=10)
+                           threshold=15, minLineLength=minLineLength,
+                           maxLineGap=maxLineGap)
 
 
 # %%
@@ -235,9 +236,9 @@ def draw_parking(image, rects, lane_list, gap=65, make_copy=True,
                 spot_dict[(x1, y, x2, y+gap)] = {'row': i + lane['start_row'],
                                                  'lane': lane['lane']}
         else:
+            lane1 = lane_list[lane_num]
+            lane2 = lane_list[lane_num + 1]
             lane_num += 2
-            lane1 = lane_list[lane_num - 1]
-            lane2 = lane_list[lane_num]
             for i in range(0, num_splits):
                 y = int(y1 + i*gap)
                 x = int((x1 + x2)/2)
@@ -445,8 +446,24 @@ def reverse_image(image, transform_matrix, spot_list, scale=1.0,
             polygon_points = reverse_rect_to_polygon(rect_points, 
                                                      reversed_matrix)
             
+            (p1, p2, p3, p4) = polygon_points[0]
+            
             cv2.fillConvexPoly(overlay, np.array(polygon_points[0], 
                                                  dtype=np.int32), color)
+            
+            row_lane = spot['lane'] + str(spot['row'])
+            
+            (x1, y1, x2, y2) = (max(p1[0], p2[0], p3[0], p4[0]),
+                                 max(p1[1], p2[1], p3[1], p4[1]),
+                                 min(p1[0], p2[0], p3[0], p4[0]),
+                                 min(p1[1], p2[1], p3[1], p4[1]))
+            
+            x = int((x1 + x2) / 2) - 10
+            y = int((y1 + y2) / 2) + 10
+            
+            cv2.putText(overlay, row_lane, (x, y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7, (255, 255, 255), 1)
             
             cnt_empty += 1
     

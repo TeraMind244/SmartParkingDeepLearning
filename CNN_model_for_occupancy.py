@@ -64,7 +64,7 @@ x = Flatten()(x)
 predictions = Dense(num_classes, activation="softmax")(x)
 
 # creating the final model
-model_final = Model(input = model.input, output = predictions)
+model_final = Model(inputs = model.input, outputs = predictions)
 
 # compile the model
 model_final.compile(loss = "categorical_crossentropy", 

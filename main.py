@@ -7,19 +7,20 @@ import opencv_identifier as opencv
 import image_utils as iu
 import read_data as rd
 import numpy as np
-#import requests
+import requests
 
 # %%
 
 
 app = Flask(__name__)
 
-list_slots = []
+merged_list_slots = []
 message = ""
 
 data = rd.get_data()
 current_lotId = data['lotId']
 cam_list = data['cam_list']
+api_domain = data['api_domain']
 
 for cam in cam_list:
     cam['transform_matrix'] = []
@@ -35,45 +36,70 @@ def add_text(image, transform_matrix, list_slots, scale):
     else:
         return iu.reverse_image(image, transform_matrix, list_slots, scale)
     
+
+# %%
+        
     
-#TODO merge result of list slots from camera
+def merge_slots(list_slots):
+    global merged_list_slots
+    for slot in list_slots:
+        row = slot['row']
+        lane = slot['lane']
+        status = slot['status']
+        existed_slot = next(filter(lambda spot: spot['row'] == row and spot['lane'] == lane,
+                                   merged_list_slots), {})
+        if existed_slot:
+            existed_slot['status'] = status
+        else:   
+            merged_list_slots.append(slot)
     
+    
+# %%
+            
+            
 def request_update(frame, lotId, camId):
     global message
     try:
-        print('Updating camera' + str(camId))
+#        print('Updating camera' + str(camId))
         transform_matrix, list_slots, scale = opencv.detect_parking_image(frame, camId)
-        cam = next(filter(lambda cam: cam['cam_id'] == camId, cam_list))
-        cam['transform_matrix'] = transform_matrix
-        cam['list_slots'] = list_slots
-        cam['scale'] = scale
-#        print(list_slots)
-#        if len(list_slots) > 0:
-#            list_slots_param = list(map(lambda slot: {
-#                    'row':slot['row'],
-#                    'lane':slot['lane'],
-#                    'status':slot['status']
-#                    }, list_slots
-#            ))
-#            requests.put('http://localhost:8080/public/update_status_slot?parkingLotId=' + str(lotId), 
-#                         json=list_slots_param)
+        merge_slots(list_slots)
+        cam = next(filter(lambda cam: cam['cam_id'] == camId, cam_list), {})
+        if cam:
+            cam['transform_matrix'] = transform_matrix
+            cam['list_slots'] = list_slots
+            cam['scale'] = scale
+        
+        global merged_list_slots
+        if len(merged_list_slots) > 0:
+            list_slots_param = list(map(lambda slot: {
+                    'row':slot['row'],
+                    'lane':slot['lane'],
+                    'status':slot['status']
+                    }, merged_list_slots
+            ))
+            requests.put(api_domain + 'public/update_status_slot?parkingLotId=' + str(lotId), 
+                         json=list_slots_param)
+            
     except:
         message = "Something went wrong!"
 
 
+# %%
+        
+
 def gen(camera, lotId):
-    count = 200
+    count = 100
     while True:
         result = []
         for cam in cam_list:
             camId = cam['cam_id']
             frame = camera.get_frame(camId)
             
-            if count == 200:
+            if count == 100:
                 request_update(frame, lotId, camId)
             
             height, width, depth = frame.shape
-            gap = np.full((50, width, depth), 255)
+            gap = np.full((20, width, depth), 255)
             
             frame = add_text(frame, 
                              cam['transform_matrix'], 
@@ -86,7 +112,7 @@ def gen(camera, lotId):
                 result = np.concatenate((result, gap, frame), axis=0)
 
         ret, jpeg = cv2.imencode('.jpg', result)
-        if count == 200:
+        if count == 100:
             count = 0
         count += 1
         yield (b'--frame\r\n'
@@ -107,18 +133,13 @@ def video_feed(lotId):
         return abort(404)
     return Response(gen(VideoCamera(cam_list), lotId),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
-#    return render_template("cam_partial.html", 
-#                           cam_list=list(map(lambda cam: cam['cam_id'], data['cam_list'])), 
-#                           lotId=current_lotId)
-    
-#@app.route('/cam_feed/<int:lotId>/<int:camId>', methods=['GET'])
-#def cam_feed(lotId, camId):
-#    return Response(gen(VideoCamera(camId), lotId, camId),
-#                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 # %%
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8081, threaded=False, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=8081, 
+            threaded=False, debug=False, 
+            use_reloader=False)
     
     
