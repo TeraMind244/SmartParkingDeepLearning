@@ -1,5 +1,10 @@
 # Smart Parking
 
+### Note:
+
+Please note that this repository is build based on [Priya Dwivedi](https://github.com/priya-dwivedi)'s project on GitHub.
+You can find the her article [here](https://towardsdatascience.com/find-where-to-park-in-real-time-using-opencv-and-tensorflow-4307a4c3da03) and her base source code [here](https://github.com/priya-dwivedi/Deep-Learning/tree/master/parking_spots_detector).
+
 ### Contents:
 
 1. `webcam_test/` - Sample image to run and test the code on
@@ -38,7 +43,7 @@ self.video = cv2.VideoCapture('your_video.avi')
 ```
 if you don't have external webcam
 
-6. `CNN_model_for_occupancy.py` - Python script for starting your model training process. Here we're using pre-trained VGG16 model from Google. Therefore, in the first time you run the script, it may take a long time for downloading the model.
+6. `CNN_model_for_occupancy.py` - Python script for starting your model training process. In the first time you run the script, it may take a long time for downloading the model. Please note that I am using Priya Dwivedi's model and it works well on my data.
 
 7. `opencv_identifier.py` - Python script for parking spot detection
 
