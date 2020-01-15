@@ -1,8 +1,8 @@
 # Smart Parking
 
-### Note:
+### Important Note:
 
-Please note that this repository is build based on [Priya Dwivedi](https://github.com/priya-dwivedi)'s project on GitHub.
+Please note that this repository is forked from [Priya Dwivedi](https://github.com/priya-dwivedi)'s project on GitHub.
 You can find the her article [here](https://towardsdatascience.com/find-where-to-park-in-real-time-using-opencv-and-tensorflow-4307a4c3da03) and her base source code [here](https://github.com/priya-dwivedi/Deep-Learning/tree/master/parking_spots_detector).
 
 ### Contents:
@@ -11,7 +11,7 @@ You can find the her article [here](https://towardsdatascience.com/find-where-to
 
 2. `train_data/` - Training data for CNN model. Sample data included
 
-3. `for_cnn/` - Directory to keep generated images for cnn. You have to manually label these images by separating them into sub-folders in side `train_data/` as structured below. Please note that `for_cnn/` is just only a directory to keep temporary images. It has no use in main process.
+3. `for_cnn/` - Directory to keep generated images for cnn. You have to manually label these images by separating them into sub-folders in side `train_data/` as structure below. Please note that `for_cnn/` is just only a directory to keep temporary images. It plays no role in main process.
 
 ```
 .
@@ -25,9 +25,9 @@ You can find the her article [here](https://towardsdatascience.com/find-where-to
         └──occupied
 ```
 
-For the best training result, you should separate them under ratio `8:2` for `train:test`
+For the best training result, you should separate them with the ratio `8:2` for `train:test`
 
-4. `templates` - Sample template to test API provided by Flask
+4. `templates` - Sample template to test API provided by `Flask`
 
 5. `camera.py` - Python class for getting frames from your webcam
 
@@ -39,7 +39,7 @@ to
 ```
 self.video = cv2.VideoCapture(0)
 or
-self.video = cv2.VideoCapture('your_video.avi')
+self.video = cv2.VideoCapture('your_video.avi') # for static video
 ```
 if you don't have external webcam
 
@@ -55,7 +55,7 @@ if you don't have external webcam
 
 11. `webcam_utils.py` - Python utils script that help you capturing video from webcam and save image for cnn model, etc. User's manual can be found below.
 
-12. `image_utils` - Python utils script that implement `Opencv` framework's algorithm.
+12. `image_utils` - Python utils script that implements `OpenCV` framework's algorithm.
 
 ### Installation
 
@@ -96,8 +96,8 @@ Where `--mode`:
 
 ### Run
 
-1. Prepare training data with `webcam_utils.py`. Your prepared data will be in `for_cnn/`. However, please note that training data should be available in `train_data/` with structured above. We have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
+1. Prepare training data with `webcam_utils.py`. Your prepared data will be in `for_cnn/`. However, please note that training data should be available in `train_data/` with structure above. I have prepared some sample data for you in `train_data/`. Therefore, you may skip this step.
 
 2. Run `CNN_model_for_occupancy.py` to start training model. Make sure you find file `car1.h5` after training process.
 
-3. Run `main.py` to start server. Your API should be available on http://0.0.0.0:8081/
+3. Run `main.py` to start server. Your API should be available at http://0.0.0.0:8081/
