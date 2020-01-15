@@ -1,12 +1,8 @@
 # %%
-#from __future__ import division
 import matplotlib.pyplot as plt
 import cv2
-#import os
 import glob
 import numpy as np
-
-#cleaned = {}
 
 # %%
 
@@ -94,7 +90,6 @@ def select_region(image, roi_array):
 def hough_lines(image, minLineLength=50, maxLineGap=20):
     """
     `image` should be the output of a Canny transform.
-
     Returns hough lines (not the image with lines)
     """
     return cv2.HoughLinesP(image, rho=0.1, theta=np.pi/10,
@@ -254,6 +249,7 @@ def draw_parking(image, rects, lane_list, gap=65, make_copy=True,
     return new_image, spot_dict
 
 # %%
+
 
 def assign_spots_map(image, spot_dict, make_copy = True, color=[255, 0, 0], thickness=2):
     if make_copy:
@@ -418,6 +414,7 @@ def reverse_rect_to_polygon(pts, reversed_matrix):
 
 
 # %%
+    
     
 def reverse_scale(pts_tuple, scale):
     return tuple((np.array(pts_tuple) / scale).astype(dtype=int))

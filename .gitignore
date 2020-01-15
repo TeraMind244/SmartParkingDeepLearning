@@ -1,9 +1,9 @@
 *.h5
 *.mp4
-__pycache__
+/__pycache__
 *.pickle
 *.ipynb
-pic
+/pic
 identify_parking_spots.py
 testFlask.py
 test_image.py

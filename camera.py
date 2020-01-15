@@ -12,7 +12,7 @@ class VideoCamera(object):
     
     def __init__(self, cam_list):
         # Using OpenCV to capture from device 0. If you have trouble capturing
-        # from a webcam, comment the line below out and use a video file
+        # from a webcam, comment these lines below out and use a video file
         # instead.
 #        self['video' + str(camId)] = cv2.VideoCapture(camId)
 #        for cam in self.cam_list:

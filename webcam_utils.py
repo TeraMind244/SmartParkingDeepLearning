@@ -7,8 +7,8 @@ import read_data as rd
 
 # %%
 
-data = rd.get_data()
 
+data = rd.get_data()
 
 # %%
 
@@ -188,32 +188,32 @@ def save_images_for_cnn(camId):
 # %%
 
 
-#def main():
-#    # print command line arguments
-#    mode = sys.argv[1]
-#    if mode == "capture":
-#        capture_video()
-#        return
-#    if mode == "show-video":
-#        show_video()
-#        return
-#    if mode == "save-a-frame":
-#        write_a_random_frame()
-#        return
-#    if mode == "save-frames":
-#        write_random_frames()
-#        return
-#    if mode == "get-training-data":
-#        save_images_for_cnn()
-#        return
-#    print("You provided wrong input! Please try again!")
-#    
-#    source = sys.argv[1]
-#    capture_video(int(source))
-#    write_a_random_frame()
+def main():
+    # print command line arguments
+    mode = sys.argv[1]
+    if mode == "capture":
+        capture_video()
+        return
+    if mode == "show-video":
+        show_video()
+        return
+    if mode == "save-a-frame":
+        write_a_random_frame()
+        return
+    if mode == "save-frames":
+        write_random_frames()
+        return
+    if mode == "get-training-data":
+        save_images_for_cnn()
+        return
+    print("You provided wrong input! Please try again!")
+    
+    source = sys.argv[1]
+    capture_video(int(source))
+    write_a_random_frame()
 
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
 
     
 # %%%
@@ -249,9 +249,9 @@ def save_images_for_cnn(camId):
 
 # %%
     
-capture_video(2)
+#capture_video(2)
 #show_video()
-write_a_random_frame()
+#write_a_random_frame()
 #write_random_frames()
 #save_images_for_cnn(2)
 
